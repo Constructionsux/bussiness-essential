@@ -924,7 +924,7 @@ def verifylogin():
         brand = deviceinfo["brand"]
         modelName = deviceinfo["modelName"]
         osName = deviceinfo["osName"]
-        osVersion = deviceinfo[" osVersion"]
+        osVersion = deviceinfo["osVersion"]
       
 
         def get_client_ip(request):
@@ -1677,6 +1677,7 @@ def save_draft(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
