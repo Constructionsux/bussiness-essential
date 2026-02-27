@@ -1060,6 +1060,7 @@ def verifylogin():
 
     except Exception as e:
         conn.rollback()
+        print(e)
         return jsonify({
             "status": "error",
             "message": "Database error",
@@ -1676,6 +1677,7 @@ def save_draft(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
