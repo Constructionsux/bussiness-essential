@@ -923,7 +923,7 @@ def verifylogin():
         deviceinfo = data['device'] 
         brand = deviceinfo["brand"]
         modelName = deviceinfo["modelName"]
-        osName = deviceinfo["osNam"]
+        osName = deviceinfo["osName"]
         osVersion = deviceinfo[" osVersion"]
       
 
@@ -1677,6 +1677,7 @@ def save_draft(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
