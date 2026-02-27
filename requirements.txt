@@ -1,0 +1,11 @@
+FLASK
+flask-cors
+mysql-connector-python
+python-dotenv
+gunicorn
+requests
+werkzeug
+PyJWT
+reportlab
+user_agents
+cloudinary
