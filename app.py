@@ -214,7 +214,7 @@ def view_draft(current_user_id, current_user_role):
             invoice_draft.client_email,
             clients.client_phone,
             clients.client_address,
-            invoice_draft.created_date,
+            invoice_draft.created_at,
             invoice_draft.due_date,
             invoice_draft.status,
             invoice_draft.items,
@@ -1694,6 +1694,7 @@ def save_draft(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
