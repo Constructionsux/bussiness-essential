@@ -227,7 +227,7 @@ def view_draft(current_user_id, current_user_role):
             invoice_draft.balance
         FROM invoice_draft
         JOIN clients ON invoice_draft.client_email = clients.client_email AND invoice_draft.user_id = clients.user_id
-        WHERE user_id = %s
+        WHERE invoice_draft.user_id = %s
         """,
         (current_user_id,)
     )
@@ -1696,6 +1696,7 @@ def save_draft(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
