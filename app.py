@@ -208,8 +208,23 @@ def view_draft(current_user_id, current_user_role):
 
     cursor.execute(
         """
-        SELECT draft_id, client_name, due_date, total_amount
+         SELECT 
+            invoice_draft.draft_id,
+            invoice_draft.iclient_name,
+            invoice_draft.client_email,
+            clients.client_phone,
+            clients.client_address,
+            invoice_draft.created_date,
+            invoice_draft.due_date,
+            invoice_draft.status,
+            invoice_draft.items,
+            invoice_draft.subtotal,
+            invoice_draft.tax,
+            invoice_draft.total,
+            invoice_draft.amount_paid,
+            invoice_draft.balance
         FROM invoice_draft
+        JOIN clients ON invoice_draft.client_email = clients.client_email AND invoice_draft.user_id = clients.user_id
         WHERE user_id = %s
         """,
         (current_user_id,)
@@ -285,7 +300,7 @@ def view_profile(current_user_id, current_user_role):
 
     cursor.execute(
         """
-        SELECT profilename
+        SELECT profilename, profilepicurl
         FROM cust_base
         WHERE user_id = %s
         """,
@@ -298,6 +313,7 @@ def view_profile(current_user_id, current_user_role):
         return jsonify({"error": "Profile not found"}), 404
     
     profilename = profile["profilename"]
+    profilepicurl= profile["profilepicurl"]
 
     cursor.execute(
         """
@@ -320,6 +336,7 @@ def view_profile(current_user_id, current_user_role):
             "role": current_user_role
         },
         "profile_name":  profilename ,
+        "profile_pic_url" : profilepicurl,
         "wallet_balance": wallet_balance,
     }), 200
 
@@ -1677,6 +1694,7 @@ def save_draft(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
