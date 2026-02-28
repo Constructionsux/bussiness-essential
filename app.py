@@ -210,7 +210,7 @@ def view_draft(current_user_id, current_user_role):
         """
          SELECT 
             invoice_draft.draft_id,
-            invoice_draft.iclient_name,
+            invoice_draft.client_name,
             invoice_draft.client_email,
             clients.client_phone,
             clients.client_address,
@@ -1694,6 +1694,7 @@ def save_draft(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
