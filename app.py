@@ -1615,6 +1615,8 @@ def save_draft(current_user_id, current_user_role):
     subtotal = float(data.get("subtotal", 0))
     tax = float(data.get("tax", 0))
     total = float(data.get("total", 0))
+    amount_paid= float(data.get("amount_paid", 0))
+    balance = float(data.get("balance", 0))
 
     if not all([client_name, client_email, invoice_date, due_date]):
         return jsonify({"status": "error", "message": "Missing required fields"}), 400
@@ -1646,9 +1648,11 @@ def save_draft(current_user_id, current_user_role):
                     price,
                     subtotal,
                     tax,
-                    total_amount
+                    total_amount,
+                    amount_paid,
+                    balance
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 """,
                 (
                     current_user_id,
@@ -1662,7 +1666,9 @@ def save_draft(current_user_id, current_user_role):
                     item.get("price", 0),
                     subtotal,
                     tax,
-                    total
+                    total,
+                    amount_paid,
+                    balance
                 )
             )
 
@@ -1696,6 +1702,7 @@ def save_draft(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
