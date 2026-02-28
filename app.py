@@ -222,7 +222,7 @@ def view_draft(current_user_id, current_user_role):
             invoice_draft.price,
             invoice_draft.subtotal,
             invoice_draft.tax,
-            invoice_draft.total,
+            invoice_draft.total_amount,
             invoice_draft.amount_paid,
             invoice_draft.balance
         FROM invoice_draft
@@ -1696,6 +1696,7 @@ def save_draft(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
