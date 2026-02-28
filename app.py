@@ -342,6 +342,54 @@ def view_profile(current_user_id, current_user_role):
         "wallet_balance": wallet_balance,
     }), 200
 
+@app.route("/api/settings", methods=["GET"])
+@token_required
+def settings_page(current_user_id, current_user_role):
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    cursor.execute(
+    """
+    SELECT 
+        invoice_prefix, next_invoice_number, default_due_date, default_tax_rate, show_tax, show_discount, footer_note,
+        currency, currency_symbol, timezone, date_format, email_notifications, due_date_reminder, reminder_days_before,
+        theme, language, auto_logout_minutes, require_pin_for_delete
+    FROM user_settings
+    WHERE user_id=%s
+    """,
+    (current_user_id,)
+    )
+    settings = cursor.fetchone()
+
+    if not settings:
+        return jsonify({
+            "status": "error",
+            "message": "An error occured while trying to fetch settings"
+        }), 400
+
+    return jsonify({
+        "status": "success",
+        "user": {
+            "id": current_user_id,
+            "role": current_user_role
+        },
+        "invoiceprefix": settings["invoice_prefix"],
+        "nextinvoicenumber": settings["next_invoice_number"],
+        "defaultduedate": settings["default_due_date"],
+        "defaulttaxrate": settings["default_tax_rate"],
+        "showtax": settings['show_tax'],
+        "showdiscount": settings["show_discount"],
+        "footernote": settings['footer_note'],
+        "currency": settings["currency"],
+        "currencysymbol": settings['currency_symbol'],
+        "timezone": settings["timezone"],
+        "emailnotifications": settings["email_notifications"],
+        "duedatereminder": settings["due_date_reminder"],
+        "reminderdaysbefore": settings["reminder_days_before"],
+        "autologoutminutes": settings["auto_logout_minutes"],
+        "requirepinfordelete": settings["require_pin_for_delete"],
+        "dateformate": settings["date_format"],
+    }), 200
+
 
 @app.route("/api/cust", methods=["POST"])
 def create_profile():
@@ -387,17 +435,7 @@ def create_profile():
                 "status": "error",
                 "message": f"Missing field: {field}"
             }), 400
-    values = [    
-            user_id,
-            data["profile_name"],
-            data["full_name"],
-            data["address"],
-            data["country"],
-            data["currency"],
-            data["dob"]
-    ]
-    for v in values:
-        print(v)
+
 
     try:
         cursor.execute("""
@@ -553,7 +591,66 @@ def verify_user():
     }), 200
 
 
+@app.route("/api/pin", methods=["POST"])
+def add_pin():
+    try:
+        data = request.get_json()
 
+        if not data:
+            return jsonify({
+                "status": "error",
+                "message": "Invalid or missing JSON"
+            }), 400
+
+        required_fields = [
+           "AppPin",
+            "ConfirmAppPin",
+            "username",
+        ]
+
+        # Validate required fields
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({
+                    "status": "error",
+                    "message": f"Missing field: {field}"
+                }), 400
+            
+        user_id = get_user_id(data['username'])
+        if not user_id:
+            return jsonify({
+            "status": "error",
+            "message": "User not found"
+            }), 404
+
+        if data["AppPin"] != data["ConfirmAppPin"]:
+            return jsonify({
+            "status": "error",
+            "message": "Pin didn't match each other."
+            }), 404
+
+        cursor.execute(
+            """
+            UPDATE user_base
+            SET app_pin=%s
+            WHERE user_id=%s
+            """
+            (data["AppPin"],user_id)
+        )
+        conn.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "App Pin Added"
+        }), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            "status": "error",
+            "message": "Database error",
+            "details": str(e)
+        }), 500
+        
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
 def allowed_file(filename):
@@ -1702,6 +1799,7 @@ def save_draft(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
