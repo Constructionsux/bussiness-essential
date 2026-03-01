@@ -636,7 +636,7 @@ def add_pin():
             SET app_pin=%s
             WHERE user_id=%s
             """
-            (,user_id)
+            (user_id,)
         )
         conn.commit()
 
@@ -1951,6 +1951,7 @@ Need help? Contact our support team at {support_email}.
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
