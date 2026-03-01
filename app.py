@@ -1796,7 +1796,7 @@ def save_draft(current_user_id, current_user_role):
 
 
 @app.route("/api/pin/update", methods=["POST"])
-@login_required
+@token_required
 def update_pin(current_user_id, current_user_role):
     cursor = conn.cursor(dictionary=True)
     try:
@@ -1948,9 +1948,174 @@ Need help? Contact our support team at {support_email}.
             "details": str(e)
         }), 500
 
+
+@app.route("/api/password/update", methods=["POST"])
+@token_required
+def update_password(current_user_id, current_user_role):
+    cursor = conn.cursor(dictionary=True)
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({
+                "status": "error",
+                "message": "Invalid or missing JSON"
+            }), 400
+    
+
+
+        required_fields = ["currentPassword", "NewPassword", "ConfirmNewPassword"]
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({
+                    "status": "error",
+                    "message": f"Missing field: {field}"
+                }), 400
+    
+        cursor.execute(
+            """
+            SELECT password_hash, username, email
+            FROM user_base
+            WHERE user_id=%s
+            """,
+            (current_user_id,)
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({
+                "status": "error",
+                "message": "User Not Found."
+            }), 400 
+    
+        current_password = hashlib.sha256(data["currentPassword"].encode()).hexdigest()
+
+        if current_password != user["password_hash"]:
+            return jsonify({
+                "status": "error",
+                "message": "Current Password Incorrect."
+            }), 400
+    
+        if data["NewPassword"] != data["ConfirmNewPassword"]:
+            return jsonify({
+                "status": "error",
+                "message": "Password doesn't match."
+            }), 400
+    
+        cursor.execute(
+            """
+            UPDATE user_base 
+            SET password_hash=%s,
+                last_password_change=NOW()
+            WHERE user_id=%s
+            """,
+            (current_password, current_user_id)
+        )
+
+        conn.commit()
+
+        username = data["username"]
+        year = datetime.now().year
+        reset_password_url = f"/security-center"
+        support_email = "support@businessessential.com"
+        change_password_html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Password Changed</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f9;font-family:Arial,sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f9;padding:40px 0;">
+<tr>
+<td align="center">
+
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;padding:40px;box-shadow:0 5px 15px rgba(0,0,0,0.05);">
+
+<tr>
+<td align="center" style="padding-bottom:20px;">
+<h2 style="margin:0;color:#111827;">Business Essential</h2>
+</td>
+</tr>
+
+<tr>
+<td>
+<h3 style="color:#111827;">Your Password Has Been Updated 🔑</h3>
+
+<p style="color:#4b5563;font-size:15px;line-height:1.6;">
+Hi {username},
+</p>
+
+<p style="color:#4b5563;font-size:15px;line-height:1.6;">
+This email confirms that your account password was successfully changed.
+</p>
+
+<p style="color:#4b5563;font-size:15px;line-height:1.6;">
+If you made this change, you can safely ignore this message.
+</p>
+
+<p style="color:#dc2626;font-size:14px;line-height:1.6;font-weight:bold;">
+If you did not change your password, your account may be at risk.
+Please reset your password immediately.
+</p>
+
+<div style="text-align:center;margin:30px 0;">
+<a href="{reset_password_url}" style="background:#dc2626;color:#ffffff;padding:12px 25px;border-radius:6px;text-decoration:none;font-weight:bold;">
+Secure My Account
+</a>
+</div>
+
+<hr style="border:none;border-top:1px solid #e5e7eb;margin:30px 0;">
+
+<p style="color:#6b7280;font-size:13px;">
+Security Tip:
+Never share your password with anyone. Business Essential will never ask for your password via email.
+</p>
+
+<hr style="border:none;border-top:1px solid #e5e7eb;margin:30px 0;">
+
+<p style="color:#9ca3af;font-size:12px;text-align:center;">
+Need assistance? Contact us at {support_email}.
+<br><br>
+© {year} Business Essential. All rights reserved.
+</p>
+
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+"""
+        send_email(
+            user["email"],
+            "Bussiness Essential - Changed Password",
+            change_password_html,
+            html=True
+        )
+
+        return jsonify({
+            "status": "success",
+            "message": "Password updated successfully"
+        }), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            "status": "error",
+            "message": "Database error",
+            "details": str(e)
+        }), 500
+
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
