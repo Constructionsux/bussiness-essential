@@ -1794,12 +1794,126 @@ def save_draft(current_user_id, current_user_role):
         cursor.close()
         print("Save draft error:", e)
 
-        return jsonify({
-            "status": "error",
-            "message": str(e)
-        }), 500
 
+@app.route("/api/pin/update", methods=["POST"])
+@login_required
+def update_pin(current_user_id, current_user_role):
+    cursor = conn.cursor(dictionary=True)
+    try:
+        data = request.get_json()
 
+        if not data:
+            return jsonify({
+                "status": "error",
+                "message": "Invalid or missing JSON"
+            }), 400
+    
+
+        required_fields = ["currentPin", "Newpin", "ConfirmNewpin"]
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({
+                    "status": "error",
+                    "message": f"Missing field: {field}"
+                }), 400
+            
+        cursor.execute(
+            """
+            SELECT app_pin, username, email
+            FROM user_base
+            WHERE user_id=%s
+            """,
+            (current_user_id,)
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({
+                "status": "error",
+                "message": "User Not Found."
+            }), 400 
+        
+        current_pin = hashlib.sha256(data["currentPin"].encode()).hexdigest()
+
+        if current_pin != user["app_pin"]:
+            return jsonify({
+                "status": "error",
+                "message": "Current Password Incorrect."
+            }), 400
+    
+        if data["Newpin"] != data["ConfirmNewpin"]:
+            return jsonify({
+                "status": "error",
+                "message": "Pin doesn't match."
+            }), 400
+
+        cursor.execute(
+            """
+            UPDATE user_base 
+            SET app_pin=%s
+            WHERE user_id=%s
+            """,
+            (current_pin,current_user_id)
+        )
+        conn.commit()
+
+        year = datetime.now().year
+        security_url = f"/security-center"
+        support_email = "support@businessessential.com"
+        username = data["username"]
+        change_pin_html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PIN Changed</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f9;font-family:Arial,sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f9;padding:40px 0;">
+<tr>
+<td align="center">
+
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;padding:40px;box-shadow:0 5px 15px rgba(0,0,0,0.05);">
+
+<tr>
+<td align="center" style="padding-bottom:20px;">
+<h2 style="margin:0;color:#111827;">Business Essential</h2>
+</td>
+</tr>
+
+<tr>
+<td>
+<h3 style="color:#111827;">Your PIN Was Successfully Changed 🔐</h3>
+
+<p style="color:#4b5563;font-size:15px;line-height:1.6;">
+Hi {username},
+</p>
+
+<p style="color:#4b5563;font-size:15px;line-height:1.6;">
+This is a confirmation that your account security PIN was recently updated.
+If you made this change, no further action is required.
+</p>
+
+<p style="color:#4b5563;font-size:15px;line-height:1.6;">
+If you did NOT request this change, please secure your account immediately.
+</p>
+
+<div style="text-align:center;margin:30px 0;">
+<a href="{security_url}" style="background:#111827;color:#ffffff;padding:12px 25px;border-radius:6px;text-decoration:none;font-weight:bold;">
+Review Security Settings
+</a>
+</div>
+
+<p style="color:#6b7280;font-size:13px;line-height:1.6;">
+For your protection, we never include sensitive details in email notifications.
+</p>
+
+<hr style="border:none;border-top:1px solid #e5e7eb;margin:30px 0;">
+
+<p style="color:#9ca3af;font-size:12px;text-align:center;">
+Need help? Contact our support team at {support_email}.
+<br><br>
 © {year} Business Essential. All rights reserved.
 </p>
 
@@ -1833,8 +1947,11 @@ def save_draft(current_user_id, current_user_role):
             "message": "Database error",
             "details": str(e)
         }), 500
+
+        
 if __name__ == "__main__":
     app.run()
+
 
 
 
