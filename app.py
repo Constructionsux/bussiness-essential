@@ -629,13 +629,14 @@ def add_pin():
             "message": "Pin didn't match each other."
             }), 404
 
+        apppin = hashlib.sha256(data["AppPin"].encode()).hexdigest()
         cursor.execute(
             """
             UPDATE user_base
             SET app_pin=%s
             WHERE user_id=%s
             """
-            (data["AppPin"],user_id)
+            (,user_id)
         )
         conn.commit()
 
@@ -1798,8 +1799,43 @@ def save_draft(current_user_id, current_user_role):
             "message": str(e)
         }), 500
 
+
+© {year} Business Essential. All rights reserved.
+</p>
+
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+"""
+        send_email(
+            user["email"],
+            "Bussiness Essential - Changed Password",
+            change_pin_html,
+            html=True
+        )
+
+        return jsonify({
+            "status": "success",
+            "message": "Pin updated successfully"
+        }), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            "status": "error",
+            "message": "Database error",
+            "details": str(e)
+        }), 500
 if __name__ == "__main__":
     app.run()
+
 
 
 
