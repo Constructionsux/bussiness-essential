@@ -142,6 +142,36 @@ def dashboard(current_user_id, current_user_role):
         "wallet_balance": wallet["wallet_balance"]
     }), 200
 
+@app.route("/api/securitycenter", methods=["GET"])
+@token_required
+def security_center(current_user_id, current_user_role):
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    cursor.execute(
+        """
+        SELECT auto_logout_minutes
+        FROM user_settings
+        WHERE user_id=%s
+        """,
+        (current_user_id,)
+    )
+    setting = cursor.fetchone()
+
+    if not setting:
+        return jsonify({
+            "status": "error",
+            "message": "No settings found for this user."
+        }), 400 
+
+    return jsonify({
+        "status": "success",
+        "user": {
+            "id": current_user_id,
+            "role": current_user_role
+        },
+        "setting": setting,
+    })
+
 @app.route("/api/view-invoices", methods=["GET"])
 @token_required
 def view_invoice(current_user_id, current_user_role):
@@ -636,7 +666,7 @@ def add_pin():
             SET app_pin=%s
             WHERE user_id=%s
             """
-            (user_id,)
+            (apppin,user_id)
         )
         conn.commit()
 
@@ -2115,6 +2145,7 @@ Need assistance? Contact us at {support_email}.
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
