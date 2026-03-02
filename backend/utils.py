@@ -119,14 +119,14 @@ def get_user_id(username):
          WHERE username=%s", 
          (username,)
     )
-    user = cursor.fetchone()
+     user = cursor.fetchone()
 
     
-    user_id = user[0] if user else None
+     user_id = user[0] if user else None
      print(user_id)
 
 
-    return user_id
+     return user_id
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -624,6 +624,7 @@ def detect_location():
      city = data.get("city")
 
      return country, state, city
+
 
 
 
