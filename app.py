@@ -660,13 +660,15 @@ def add_pin():
             }), 404
 
         apppin = hashlib.sha256(data["AppPin"].encode()).hexdigest()
+        print(user_id)
+        print(apppin)
         cursor.execute(
             """
             UPDATE user_base
             SET app_pin=%s
             WHERE user_id=%s
             """,
-            (apppin,user_id)
+            (apppin, user_id)
         )
         conn.commit()
 
@@ -2145,6 +2147,7 @@ Need assistance? Contact us at {support_email}.
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
