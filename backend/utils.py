@@ -113,22 +113,17 @@ def send_email_async(recipient: str, subject: str, body: str, html: bool=False, 
 
     
 def get_user_id(username):
-    cursor.execute(
+     cursor.execute(
           """
           SELECT user_id
           FROM user_base
           WHERE username=%s
           """,
          (username,)
-    )
+     )
      user = cursor.fetchone()
 
-    
-     user_id = user[0] if user else None
-     print(user_id)
-
-
-     return user_id
+     return user[0] if user else None
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -626,6 +621,7 @@ def detect_location():
      city = data.get("city")
 
      return country, state, city
+
 
 
 
