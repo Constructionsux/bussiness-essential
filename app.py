@@ -126,6 +126,18 @@ def dashboard(current_user_id, current_user_role):
     if not wallet:
         return jsonify({"error": "Wallet not found"}), 404
 
+    # Get Activities
+    cursor.execute(
+        """
+        SELECT id,title, status,created_at, amount
+        FROM log_activity
+        WHERE user_id=%s  AND  created_at>=%s
+        ORDER BY created_at DESC
+        """,
+        (current_user_id,datetime.now() - timedelta(days=1))
+    )
+    activities = cursor.fetchall()
+
     return jsonify({
         "status": "success",
         "user": {
@@ -139,7 +151,8 @@ def dashboard(current_user_id, current_user_role):
         "pending_invoices": pending_invoices,
         "total_revenue": total_revenue,
         "currency_symbol": settings["currency_symbol"],
-        "wallet_balance": wallet["wallet_balance"]
+        "wallet_balance": wallet["wallet_balance"],
+        "activities": activities,
     }), 200
 
 @app.route("/api/securitycenter", methods=["GET"])
@@ -2144,9 +2157,77 @@ Need assistance? Contact us at {support_email}.
             "details": str(e)
         }), 500
 
+@app.route("/api/update-settings", methods=["POST"])
+@token_required
+def update_settings(current_user_id, current_user_role):
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "status": "error",
+                "message": "Invalid or missing JSON"
+            }), 400
+        
+        cursor.execute(
+            """
+            UPDATE user_settings
+            SET 
+                show_tax=%s,
+                enable_discount=%s,
+                email_notifications=%s,
+                due_date_reminder=%s,
+                require_pin_for_delete=%s,
+                invoice_prefix=%s,
+                next_invoice_number=%s,
+                default_due_date_days=%s,
+                default_tax_rate=%s,
+                invoice_footer_note=%s,
+                currency=%s,
+                currency_symbol=%s,
+                timezone=%s,
+                reminder_days_before=%s,
+                auto_logout_minutes=%s,
+                date_format=%s
+            WHERE user_id = %s
+            """,
+            (
+                data.get("showTax", False),
+                data.get("enableDiscount", False),
+                data.get("emailNotifications", False),
+                data.get("dueReminder", False),
+                data.get("requirePin", False),
+                data.get("invoicePrefix", ""),
+                data.get("nextInvoiceNumber", 0),
+                data.get("defaultDueDate", 0),
+                data.get("defaultTaxRate", 0),
+                data.get("invoiceFooterNote", ""),
+                data.get("currency", ""),
+                data.get("currencySymbol", ""),
+                data.get("timeZone", ""),
+                data.get("reminderDays", 0),
+                data.get("autoLogout", 0),
+                data.get("dateFormat", ""),
+                current_user_id
+            )
+        )
+        conn.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Settings updated successfully"
+        }), 200
+    except Exception as e:
+        conn.rollback()
+        print(e)
+        return jsonify({
+            "status": "error",
+            "message": "Database error",
+            "details": str(e)
+        }), 500
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
