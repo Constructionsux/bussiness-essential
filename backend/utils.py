@@ -113,17 +113,15 @@ def send_email_async(recipient: str, subject: str, body: str, html: bool=False, 
 
     
 def get_user_id(username):
-    cursor.execute("SELECT user_id, username FROM user_base WHERE username=%s", (username,))
+    cursor.execute(
+         "SELECT user_idFROM user_base WHERE username=%s", 
+         (username,)
+    )
     user = cursor.fetchone()
 
-    if not user:
-        return jsonify({
-            "status": "error",
-            "message": "User not found"
-        }), 400
     
-    
-    user_id = user[0]
+    user_id = user[0] if user else None
+     print(user_id)
 
 
     return user_id
@@ -624,6 +622,7 @@ def detect_location():
      city = data.get("city")
 
      return country, state, city
+
 
 
 
