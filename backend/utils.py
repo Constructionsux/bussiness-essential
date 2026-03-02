@@ -114,7 +114,9 @@ def send_email_async(recipient: str, subject: str, body: str, html: bool=False, 
     
 def get_user_id(username):
     cursor.execute(
-         "SELECT user_idFROM user_base WHERE username=%s", 
+         "SELECT user_id 
+         FROM user_base 
+         WHERE username=%s", 
          (username,)
     )
     user = cursor.fetchone()
@@ -622,6 +624,7 @@ def detect_location():
      city = data.get("city")
 
      return country, state, city
+
 
 
 
