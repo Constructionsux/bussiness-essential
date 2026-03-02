@@ -2191,11 +2191,11 @@ def update_settings(current_user_id, current_user_role):
             WHERE user_id = %s
             """,
             (
-                data.get("showTax", False),
-                data.get("enableDiscount", False),
-                data.get("emailNotifications", False),
-                data.get("dueReminder", False),
-                data.get("requirePin", False),
+                data.get("showTax"),
+                data.get("enableDiscount"),
+                data.get("emailNotifications"),
+                data.get("dueReminder"),
+                data.get("requirePin"),
                 data.get("invoicePrefix", ""),
                 data.get("nextInvoiceNumber", 0),
                 data.get("defaultDueDate", 0),
@@ -2330,6 +2330,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
