@@ -2224,9 +2224,113 @@ def update_settings(current_user_id, current_user_role):
             "message": "Database error",
             "details": str(e)
         }), 500
+
+
+@app.route("/api/invoices/<int:invoice_id>", methods=["GET"])
+@token_required
+def get_invoice(current_user_id, current_user_role, invoice_id):
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    
+    cursor.execute(
+        """
+        SELECT id,status,client_email,subtotal,tax,total,amount_paid,balance,invoice_date,due_date
+        FROM invoices
+        WHERE id=%s AND user_id=%s
+        """,
+        (invoice_id, current_user_id)
+    )
+    invoice = cursor.fetchone()
+
+    if not invoice:
+        return jsonify({
+            "status": "error",
+            "message": "Invoice not found"
+        }), 404
+
+    id,status,client_email,subtotal,tax,total,amount_paid,balance,invoice_date,due_date = invoice
+
+    cursor.execute(
+        """
+        SELECT client_email, client_name, client_address, client_phone
+        FROM clients
+        WHERE user_id=%s AND client_email=%s
+        """,
+        (current_user_id, client_email)
+    )
+
+    client = cursor.fetchone()
+
+    cursor.execute(
+        """
+        SELECT description, quantity, price
+        FROM invoice_items
+        WHERE invoice_id=%s AND user_id=%s
+        """,
+        (id, current_user_id)
+    )
+    items = cursor.fetchall()
+
+
+    cursor.execute(
+        """
+        SELECT invoice_prefix
+        FROM user_settings
+        WHERE user_id=%s
+        """,
+        (current_user_id,)
+    )
+    invoiceprefix = cursor.fetchone()[0]
+
+    year_str = invoice_date.strptime("%d-%m-%Y %H:%M:%S")
+    year = year_str.strftime("%Y")
+
+
+    cursor.execute(
+        """
+        SELECT  user_base.email,
+                user_base.user_id,
+                cust_base.fullname AS name,
+                cust_base.address,
+                cust_base.phone
+        FROM user_base
+        JOIN cust_base ON user_base.user_id = cust_base.user_id
+        WHERE user_id=%s
+        """,
+        (current_user_id,)
+    )
+    user = cursor.fetchone()
+      
+    return jsonify({
+        "status": "success",
+        "user": {
+            "id": current_user_id,
+            "role": current_user_role
+        },
+        "client": client,
+        "invoiceNumber": f"{invoiceprefix}-{year}-{id}",
+        "status": status,
+        "subtotal": subtotal,
+        "tax": tax,
+        "total": total,
+        "amount_paid": amount_paid,
+        "balance": balance,
+        "invoice_date": str(invoice_date),
+        "due_date": str(due_date),
+        "items": items,
+        "user":  user,
+        "company":  {
+            "name": "Bussiness Essential",
+            "email": "billing@businessessential.com",
+            "address": "No 9 Lamina Estate, Ikorodu, Lagos",
+        }
+
+    }), 200
+    
+
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
