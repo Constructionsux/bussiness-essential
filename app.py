@@ -2718,12 +2718,67 @@ def update_profile_pic(current_user_id,current_user_role):
             "message": "Database error",
             "details": str(e)
         }), 500
-   
+
+
+@app.route("/api/clients/update/<int:client_id>", methods=["GET"])
+@token_required
+def update_client(current_user_id,current_user_role,client_id):
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "status": "error",
+            "message": "Invalid or missing JSON"
+        }), 400
+
+    required_fields = [
+        "name", 
+        "email", 
+        "phone", 
+        "address"
+    ]
+
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({
+                "status": "error",
+                "message": f"Missing field: {field}"
+            }), 400
         
+    try: 
+        cursor.execute(
+            """
+            UPDATE clients
+            SET client_name=%s,
+                client_email=%s,
+                client_phone=%s,
+                client_address=%s
+            WHERE user_id=%s AND client_id=%s
+            """,
+            (data["name"], data["email"], data["phone"], data["address"], current_user_id,client_id)
+        )
+        conn.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Updated client successfully."
+        })
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            "status": "error",
+            "message": "Database error",
+            "details": str(e)
+        }), 500
+
+
+
+
 
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
