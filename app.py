@@ -523,11 +523,11 @@ def get_profile(current_user_id, current_user_role):
             cust_base.website,
             cust_base.profilepicurl, 
             cust_base.bio, 
-            cust_base.companylogourl   
+            cust_base.companylogourl,
             user_base.username      
         FROM cust_base 
         JOIN user_base ON cust_base.user_id = user_base.user_id
-        WHERE user_id=%s
+        WHERE cust_base.user_id=%s
         """,
         (current_user_id,)
     )
@@ -2329,7 +2329,7 @@ def update_settings(current_user_id, current_user_role):
                 require_pin_for_delete=%s,
                 invoice_prefix=%s,
                 next_invoice_number=%s,
-                default_due_date_days=%s,
+                default-due_date=%s,
                 default_tax_rate=%s,
                 invoice_footer_note=%s,
                 currency=%s,
@@ -2487,6 +2487,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
