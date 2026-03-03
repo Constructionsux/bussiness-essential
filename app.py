@@ -2771,6 +2771,47 @@ def update_client(current_user_id,current_user_role,client_id):
             "details": str(e)
         }), 500
 
+    
+@app.route("/api/update/companylogo", methods=["POST"])
+@token_required
+def update_company_logo(current_user_id,current_user_role):
+    file = request.files.get("company_logo")  # Make sure your input type="file"
+        
+    if file:
+        
+        result = cloudinary.uploader.upload(
+            file,
+            folder="company_logo",
+            transformation = [
+                {"width":300, "height":300, "crop":"fill"}
+            ],
+            public_id = f"user_logo_{current_user_id}",
+            overwrite= True
+        )
+        save_path = result['secure_url']
+    
+    try:
+        cursor.execute(
+            """
+            UPDATE cust_base 
+            SET companylogourl=%s
+            WHERE user_id=%s
+            """,
+            (save_path, current_user_id)
+        )
+
+        conn.commit()
+        return jsonify({
+            "status": "success",
+            "message": "Company Logo changed successfully."
+        }), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            "status": "error",
+            "message": "Database error",
+            "details": str(e)
+        }), 500
 
 
 
@@ -2778,6 +2819,7 @@ def update_client(current_user_id,current_user_role,client_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
