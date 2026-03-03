@@ -686,6 +686,41 @@ def full_drafts(current_user_id, current_user_role, draft_id):
     })
 
 
+@app.route("/api/clients/<int:client_id>", methods=["GET"])
+@token_required
+def full_client(current_user_id,current_user_role,client_id):
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    cursor.execute(
+        """
+        SELECT 
+            client_email AS email,
+            client_name AS name,
+            client_phone AS phone,
+            client_address AS address
+        FROM clients
+        WHERE user_id=%s AND client_id=%s
+        """,
+        (current_user_id,client_id)
+    )
+    client = cursor.fetchone()
+
+    if not client:
+        return jsonify({
+            "status": "error",
+            "message": "Client Not Found."
+        })
+
+    return jsonify({
+        "status": "success",
+        "user": {
+            "id": current_user_id,
+            "role": current_user_role
+        },
+        "client": client,
+    })
+
+
 @app.route("/api/cust", methods=["POST"])
 def create_profile():
     data = request.get_json()
@@ -2689,6 +2724,7 @@ def update_profile_pic(current_user_id,current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
