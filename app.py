@@ -598,6 +598,7 @@ def get_profile(current_user_id, current_user_role):
         })
     
     fullname,profilename,address,country,phone,alternateemail,website,profilepicurl, bio, companylogourl, username = profile
+    print(profilepicurl)
 
     return jsonify({
         "status": "success",
@@ -612,7 +613,7 @@ def get_profile(current_user_id, current_user_role):
         "phone": phone,
         "website": website,
         "alternateemail": alternateemail,
-        "profile_image": profilepicurl,
+        "profilepicurl": profilepicurl,
         "bio": bio,
         "username": username,
         "company_logo": companylogourl,
@@ -2690,6 +2691,7 @@ def update_profile_pic(current_user_id,current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
