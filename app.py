@@ -642,7 +642,7 @@ def transation_page(current_user_id,current_user_role):
 
 @app.route("/api/drafts/<int:draft_id>", methods=["GET"])
 @token_required
-def full_drafts(current_user_id, current_user_role, draf_id):
+def full_drafts(current_user_id, current_user_role, draft_id):
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -2640,6 +2640,7 @@ def add_clients(current_user_id, current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
