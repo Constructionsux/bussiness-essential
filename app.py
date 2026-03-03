@@ -2348,9 +2348,9 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         """
         SELECT description, quantity, price
         FROM invoice_items
-        WHERE invoice_id=%s AND user_id=%s
+        WHERE invoice_id=%s
         """,
-        (id, current_user_id)
+        (id,)
     )
     items = cursor.fetchall()
 
@@ -2414,6 +2414,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
