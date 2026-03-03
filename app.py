@@ -2323,7 +2323,7 @@ def update_settings(current_user_id, current_user_role):
             UPDATE user_settings
             SET 
                 show_tax=%s,
-                enable_discount=%s,
+                show_discount=%s,
                 email_notifications=%s,
                 due_date_reminder=%s,
                 require_pin_for_delete=%s,
@@ -2487,6 +2487,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
