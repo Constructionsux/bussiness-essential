@@ -2574,10 +2574,10 @@ def add_clients(current_user_id, current_user_role):
 
         cursor.execute(
             """
-            INSERT INTO clients(name, email, phone, address)
-            VALUE(%s, %s, %s, %s)
+            INSERT INTO clients(user_id,client_name, client_email, client_phone, client_address)
+            VALUE(%s, %s, %s, %s, %s)
             """,
-            (data['name'], data['email'], data['phone'], data['address'])
+            (current_user_id,data['name'], data['email'], data['phone'], data['address'])
         )
         conn.commit()
 
@@ -2598,6 +2598,7 @@ def add_clients(current_user_id, current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
