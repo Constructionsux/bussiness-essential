@@ -505,7 +505,59 @@ def payment_page(current_user_id, current_user_role):
         "invoiceprefix": invoice_prefix,
         "invoices": invoices
     })
+
+@app.route("/api/profile", methods=["POST"])
+@token_required
+def get_profile(current_user_id, current_user_role):
+    cursor = conn.cursor(dictionary=True,buffered=True)
+
+    cursor.execute(
+        """
+        SELECT 
+            cust_base.fullname,
+            cust_base.profilename,
+            cust_base.address,
+            cust_base.country,
+            cust_base.phone,
+            cust_base.alternateemail,
+            cust_base.website,
+            cust_base.profilepicurl, 
+            cust_base.bio, 
+            cust_base.companylogourl   
+            user_base.username      
+        FROM cust_base 
+        JOIN user_base ON cust_base.user_id = user_base.user_id
+        WHERE user_id=%s
+        """,
+        (current_user_id,)
+    )
+    profile = cursor.fetchone()
+    if not profile:
+        return jsonify({
+            "status": "error",
+            "message": "Profile Not found."
+        })
     
+    fullname,profilename,address,country,phone,alternateemail,website,profilepicurl, bio, companylogourl, username = profile
+
+    return jsonify({
+        "status": "success",
+        "user": {
+            "id": current_user_id,
+            "role": current_user_role
+        },
+        "fullname":fullname,
+        "profilename": profilename,
+        "address":address,
+        "country": country,
+        "phone": phone,
+        "website": website,
+        "alternateemail": alternateemail,
+        "profile_image": profilepicurl,
+        "bio": bio,
+        "username": username,
+        "company_logo": companylogourl,
+    })
 
 @app.route("/api/cust", methods=["POST"])
 def create_profile():
@@ -2406,6 +2458,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
