@@ -165,7 +165,7 @@ def token_required(f):
     return decorated
 
 
-LOGO_PATH = os.path.join('static', 'media', 'app logo.png')  # Replace with your logo path
+LOGO_PATH = "https://res.cloudinary.com/dkb987i8w/image/upload/v1772108684/app_logo_ky1yis.png"  # Replace with your logo path
 
 
 def generate_invoice_pdf(invoice_id, client_name, client_email,
@@ -614,7 +614,7 @@ def parse_user_agent(user_agent_string):
 
 def detect_location():
      ip = request.headers.get("X-Forwarded-For", request.remote_addr)
-     response = requests.get(f"http://ipwho.is/{ip}")
+     response = requests.get(f"https://ipinfo.io/{ip}/json", timeout=5)
      data = response.json()
 
      country = data.get("country")
