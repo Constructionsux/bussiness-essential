@@ -2331,7 +2331,7 @@ def update_settings(current_user_id, current_user_role):
                 next_invoice_number=%s,
                 default-due_date=%s,
                 default_tax_rate=%s,
-                invoice_footer_note=%s,
+                footer_note=%s,
                 currency=%s,
                 currency_symbol=%s,
                 timezone=%s,
@@ -2487,6 +2487,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
