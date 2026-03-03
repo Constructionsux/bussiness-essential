@@ -434,69 +434,57 @@ def settings_page(current_user_id, current_user_role):
     }), 200
 
 
-    
 @app.route("/api/payments", methods=["GET"])
 @token_required
-def payment_page(current_user_id,current_user_role):
-    # fetch total recieved
-    cursor.execute(
-        """
-        SELECT  COALESCE(SUM(total_amount), 0) 
+def payment_page(current_user_id, current_user_role):
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    # ================= TOTAL RECEIVED =================
+    cursor.execute("""
+        SELECT COALESCE(SUM(total_amount), 0) AS total
         FROM invoices
         WHERE user_id=%s AND status=%s
-        ORDER BY invoice_date DESC
-    """, (current_user_id,"paid")
-    )
-    total_revenue = cursor.fetchone()[0]
-    total_recieved = f"{total_revenue:,.2f}"
+    """, (current_user_id, "paid"))
+    total_received = cursor.fetchone()["total"]
 
-    # Fetch outstanding
-    cursor.execute(
-        """
-        SELECT  COALESCE(SUM(total_amount), 0) 
+    # ================= OUTSTANDING =================
+    cursor.execute("""
+        SELECT COALESCE(SUM(total_amount), 0) AS total
         FROM invoices
         WHERE user_id=%s AND status=%s
-        ORDER BY invoice_date DESC
-    """, (current_user_id,"pending")
-    )
-    outstanding_revenue = cursor.fetchone()[0]
-    outstanding= f"{outstanding_revenue:,.2f}"
+    """, (current_user_id, "pending"))
+    outstanding = cursor.fetchone()["total"]
 
-
-    # Feth Overdue
-    cursor.execute(
-        """
-        SELECT  COALESCE(SUM(total_amount), 0) 
+    # ================= OVERDUE =================
+    cursor.execute("""
+        SELECT COALESCE(SUM(total_amount), 0) AS total
         FROM invoices
         WHERE user_id=%s AND status=%s
-        ORDER BY invoice_date DESC
-    """, (current_user_id,"overdue")
-    )
-    overdue_revenue = cursor.fetchone()[0]
-    overdue= f"{overdue_revenue:,.2f}"
+    """, (current_user_id, "overdue"))
+    overdue = cursor.fetchone()["total"]
 
-    # Fetch currency
-    cursor.execute(
-        """
+    # ================= USER SETTINGS =================
+    cursor.execute("""
         SELECT currency, currency_symbol, invoice_prefix
         FROM user_settings
         WHERE user_id=%s
-        """,
-        (current_user_id,)
-    )
+    """, (current_user_id,))
     settings = cursor.fetchone()
+
     if not settings:
         return jsonify({"error": "Settings not found"}), 404
-    currency, currency_symbol, invoice_prefix = settings
 
-  
-    # Fetch all invoices for this user
+    currency = settings["currency"]
+    currency_symbol = settings["currency_symbol"]
+    invoice_prefix = settings["invoice_prefix"]
+
+    # ================= ALL INVOICES =================
     cursor.execute("""
         SELECT 
-            id, 
-            client_name AS client, 
-            invoice_date AS date, 
-            total_amount AS amount, 
+            id,
+            client_name AS client,
+            DATE_FORMAT(invoice_date, '%Y-%m-%d') AS date,
+            total_amount AS amount,
             status
         FROM invoices
         WHERE user_id=%s
@@ -510,13 +498,14 @@ def payment_page(current_user_id,current_user_role):
             "id": current_user_id,
             "role": current_user_role
         },
-        "totalReceived": total_recieved,
-        "outstanding": outstanding,
-        "overdue": overdue,
+        "totalReceived": total_received,   # NUMBER
+        "outstanding": outstanding,       # NUMBER
+        "overdue": overdue,               # NUMBER
         "currency": currency_symbol,
         "invoiceprefix": invoice_prefix,
-        "invoices": invoices,
+        "invoices": invoices
     })
+    
 
 @app.route("/api/cust", methods=["POST"])
 def create_profile():
@@ -2363,7 +2352,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         """,
         (current_user_id,)
     )
-    invoiceprefix = cursor.fetchone()[0]
+    invoiceprefix = cursor.fetchone()["invoice_prefix"]
 
     year_str = invoice_date.strptime("%d-%m-%Y %H:%M:%S")
     year = year_str.strftime("%Y")
@@ -2414,6 +2403,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
