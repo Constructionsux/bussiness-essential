@@ -2317,7 +2317,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
     
     cursor.execute(
         """
-        SELECT id,status,client_email,subtotal,tax,total,amount_paid,balance,invoice_date,due_date
+        SELECT id,status,client_email,subtotal,tax,total_amount,amount_paid,balance,invoice_date,due_date
         FROM invoices
         WHERE id=%s AND user_id=%s
         """,
@@ -2414,6 +2414,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
