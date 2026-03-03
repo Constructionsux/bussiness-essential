@@ -640,6 +640,48 @@ def transation_page(current_user_id,current_user_role):
     })
 
 
+@app.route("/api/drafts/<int:draft_id>", methods=["GET"])
+@token_required
+def full_drafts(current_user_id, current_user_role, draf_id):
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    cursor.execute(
+        """
+        SELECT 
+            client_email,
+            due_date,
+            invoice_date,
+            description,
+            quantity,
+            price,
+            tax,
+            amount_paid,
+        FROM invoice_draft
+        WHERE user_id =%s AND  draft_id=%s
+        """,
+        (current_user_id, draf_id)
+    )
+    draft = cursor.fetchone()
+
+    return jsonify({
+        "status": "success",
+        "user": {
+            "id": current_user_id,
+            "role": current_user_role
+        },
+        "client_email": draft["client_email"],
+        "due_date": draft["due_date"],
+        "invoice_date": draft["invoice_date"],
+        "tax": draft["tax"],
+        "amount_paid": draft["amount_paid"],
+        "items": [
+            draft["description"],
+            draft["price"],
+            draft["quantity"]
+        ],
+    })
+
+
 @app.route("/api/cust", methods=["POST"])
 def create_profile():
     data = request.get_json()
@@ -2598,6 +2640,7 @@ def add_clients(current_user_id, current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
