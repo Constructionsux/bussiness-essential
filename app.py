@@ -129,7 +129,7 @@ def dashboard(current_user_id, current_user_role):
     # Get Activities
     cursor.execute(
         """
-        SELECT id,title, status,created_at, amount
+        SELECT id,title, status,created_at AS time, amount
         FROM log_activity
         WHERE user_id=%s  AND  created_at>=%s
         ORDER BY created_at DESC
@@ -1796,7 +1796,7 @@ def create_invoice(current_user_id, current_user_role):
         save_log_activity(
            current_user_id ,
             "Invoice",
-            "Created",
+            "Created Invoice",
             f"Invoice #{invoice_id} created for {client_name}",
             total,
             status
@@ -2298,20 +2298,20 @@ def update_settings(current_user_id, current_user_role):
             "details": str(e)
         }), 500
 
-
 @app.route("/api/invoices/<int:invoice_id>", methods=["GET"])
 @token_required
 def get_invoice(current_user_id, current_user_role, invoice_id):
     cursor = conn.cursor(dictionary=True, buffered=True)
-    
-    cursor.execute(
-        """
-        SELECT id,status,client_email,subtotal,tax,total_amount,amount_paid,balance,invoice_date,due_date
+
+    # ================= INVOICE =================
+    cursor.execute("""
+        SELECT id, status, client_email, subtotal, tax,
+               total_amount, amount_paid, balance,
+               invoice_date, due_date
         FROM invoices
         WHERE id=%s AND user_id=%s
-        """,
-        (invoice_id, current_user_id)
-    )
+    """, (invoice_id, current_user_id))
+
     invoice = cursor.fetchone()
 
     if not invoice:
@@ -2320,46 +2320,51 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
             "message": "Invoice not found"
         }), 404
 
-    id,status,client_email,subtotal,tax,total,amount_paid,balance,invoice_date,due_date = invoice
+    # Extract values safely
+    invoice_id = invoice["id"]
+    status = invoice["status"]
+    client_email = invoice["client_email"]
+    subtotal = invoice["subtotal"]
+    tax = invoice["tax"]
+    total = invoice["total_amount"]
+    amount_paid = invoice["amount_paid"]
+    balance = invoice["balance"]
+    invoice_date = invoice["invoice_date"]
+    due_date = invoice["due_date"]
 
-    cursor.execute(
-        """
+    # ================= CLIENT =================
+    cursor.execute("""
         SELECT client_email, client_name, client_address, client_phone
         FROM clients
         WHERE user_id=%s AND client_email=%s
-        """,
-        (current_user_id, client_email)
-    )
+    """, (current_user_id, client_email))
 
     client = cursor.fetchone()
 
-    cursor.execute(
-        """
+    # ================= ITEMS =================
+    cursor.execute("""
         SELECT description, quantity, price
         FROM invoice_items
         WHERE invoice_id=%s
-        """,
-        (id,)
-    )
+    """, (invoice_id,))
+
     items = cursor.fetchall()
 
-
-    cursor.execute(
-        """
+    # ================= SETTINGS =================
+    cursor.execute("""
         SELECT invoice_prefix
         FROM user_settings
         WHERE user_id=%s
-        """,
-        (current_user_id,)
-    )
-    invoiceprefix = cursor.fetchone()["invoice_prefix"]
+    """, (current_user_id,))
 
-    year_str = invoice_date.strptime("%d-%m-%Y %H:%M:%S")
-    year = year_str.strftime("%Y")
+    settings = cursor.fetchone()
+    invoice_prefix = settings["invoice_prefix"] if settings else "INV"
 
+    # ================= YEAR (Correct way) =================
+    year = invoice_date.strftime("%Y") if invoice_date else ""
 
-    cursor.execute(
-        """
+    # ================= USER INFO =================
+    cursor.execute("""
         SELECT  user_base.email,
                 user_base.user_id,
                 cust_base.fullname AS name,
@@ -2367,42 +2372,41 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
                 cust_base.phone
         FROM user_base
         JOIN cust_base ON user_base.user_id = cust_base.user_id
-        WHERE user_id=%s
-        """,
-        (current_user_id,)
-    )
-    user = cursor.fetchone()
-      
+        WHERE user_base.user_id=%s
+    """, (current_user_id,))
+
+    user_info = cursor.fetchone()
+
     return jsonify({
         "status": "success",
-        "user": {
+        "auth_user": {   # renamed to avoid duplicate key
             "id": current_user_id,
             "role": current_user_role
         },
-        "client": client,
-        "invoiceNumber": f"{invoiceprefix}-{year}-{id}",
-        "status": status,
+        "invoiceNumber": f"{invoice_prefix}-{year}-{invoice_id}",
+        "status_value": status,
         "subtotal": subtotal,
         "tax": tax,
         "total": total,
         "amount_paid": amount_paid,
         "balance": balance,
-        "invoice_date": str(invoice_date),
-        "due_date": str(due_date),
+        "invoice_date": invoice_date.strftime("%Y-%m-%d %H:%M:%S") if invoice_date else None,
+        "due_date": due_date.strftime("%Y-%m-%d") if due_date else None,
+        "client": client,
         "items": items,
-        "user":  user,
-        "company":  {
-            "name": "Bussiness Essential",
+        "user": user_info,
+        "company": {
+            "name": "Business Essential",
             "email": "billing@businessessential.com",
-            "address": "No 9 Lamina Estate, Ikorodu, Lagos",
+            "address": "No 9 Lamina Estate, Ikorodu, Lagos"
         }
-
     }), 200
     
 
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
