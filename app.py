@@ -2644,18 +2644,22 @@ def update_profile_pic(current_user_id,current_user_role):
     try:
         file = request.files.get("profile_picture")  # Make sure your input type="file"
         
-        if file:
+        if not file:
+            return jsonify({
+                "status":"error",
+                "message":"failed",
+            })
         
-            result = cloudinary.uploader.upload(
-                file,
-                folder="profile_images",
-                transformation = [
-                    {"width":300, "height":300, "crop":"fill"}
-                ],
-                public_id = f"user_{current_user_id}",
-                overwrite= True
-            )
-            save_path = result['secure_url']
+        result = cloudinary.uploader.upload(
+            file,
+            folder="profile_images",
+            transformation = [
+                {"width":300, "height":300, "crop":"fill"}
+            ],
+            public_id = f"user_{current_user_id}",
+            overwrite= True
+        )
+        save_path = result['secure_url']
 
         cursor.execute(
             """
@@ -2685,6 +2689,7 @@ def update_profile_pic(current_user_id,current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
