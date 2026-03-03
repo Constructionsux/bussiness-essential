@@ -479,7 +479,7 @@ def settings_page(current_user_id, current_user_role):
         "defaultduedate": settings["default_due_date"],
         "defaulttaxrate": settings["default_tax_rate"],
         "showtax": bool(settings['show_tax']),
-        "showdiscount": bool(ettings["show_discount"]),
+        "showdiscount": bool(settings["show_discount"]),
         "footernote": settings['footer_note'],
         "currency": settings["currency"],
         "currencysymbol": settings['currency_symbol'],
@@ -2691,6 +2691,7 @@ def update_profile_pic(current_user_id,current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
