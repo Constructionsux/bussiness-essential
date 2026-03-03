@@ -2582,7 +2582,7 @@ def add_clients(current_user_id, current_user_role):
         conn.commit()
 
         return jsonify({
-            "status": "error",
+            "status": "success",
             "message": "Client Added Successfully."
         })
     except Exception as e:
@@ -2598,6 +2598,7 @@ def add_clients(current_user_id, current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
