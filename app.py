@@ -506,7 +506,7 @@ def payment_page(current_user_id, current_user_role):
         "invoices": invoices
     })
 
-@app.route("/api/profile", methods=["POST"])
+@app.route("/api/profile", methods=["GET"])
 @token_required
 def get_profile(current_user_id, current_user_role):
     cursor = conn.cursor(dictionary=True,buffered=True)
@@ -2487,6 +2487,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
