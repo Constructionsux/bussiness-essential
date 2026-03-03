@@ -558,18 +558,18 @@ def generate_reference(invoice_prefix):
 
 
 def save_log_activity(user_id, type_, title, description, amount: Optional[float] = None, status: Optional[str] = None):
-    if amount and status:
-        cursor.execute(
-            "INSERT INTO log_activity (user_id, type, title, description,amount,status) VALUES (%s,%s,%s,%s,%s,%s)",
-            (user_id, type_, title, description,amount,status)
-        )
-     else:
+     if not amount and status:
           cursor.execute(
                "INSERT INTO log_activity (user_id, type, title, description) VALUES (%s,%s,%s,%s)",
                (user_id, type_, title, description)
-         )
+          )
+   
+     cursor.execute(
+          "INSERT INTO log_activity (user_id, type, title, description,amount,status) VALUES (%s,%s,%s,%s,%s,%s)",
+          (user_id, type_, title, description,amount,status)
+     )
 
-    conn.commit()
+     conn.commit()
 
 def parse_user_agent(user_agent_string):
     ua = parse(user_agent_string)
@@ -622,6 +622,7 @@ def detect_location():
      city = data.get("city")
 
      return country, state, city
+
 
 
 
