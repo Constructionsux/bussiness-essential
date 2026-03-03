@@ -558,15 +558,16 @@ def generate_reference(invoice_prefix):
 
 
 def save_log_activity(user_id, type_, title, description, amount: Optional[float] = None, status: Optional[str] = None):
-    cursor.execute(
-        "INSERT INTO log_activity (user_id, type, title, description) VALUES (%s,%s,%s,%s)",
-        (user_id, type_, title, description)
-    )
     if amount and status:
         cursor.execute(
             "INSERT INTO log_activity (user_id, type, title, description,amount,status) VALUES (%s,%s,%s,%s,%s,%s)",
             (user_id, type_, title, description,amount,status)
-        )   
+        )
+     else:
+          cursor.execute(
+               "INSERT INTO log_activity (user_id, type, title, description) VALUES (%s,%s,%s,%s)",
+               (user_id, type_, title, description)
+         )
 
     conn.commit()
 
@@ -621,6 +622,7 @@ def detect_location():
      city = data.get("city")
 
      return country, state, city
+
 
 
 
