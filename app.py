@@ -2386,7 +2386,11 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
 
     # ================= CLIENT =================
     cursor.execute("""
-        SELECT client_email, client_name, client_address, client_phone
+        SELECT 
+            client_email AS email, 
+            client_name AS name, 
+            client_address AS address, 
+            client_phone AS phone
         FROM clients
         WHERE user_id=%s AND client_email=%s
     """, (current_user_id, client_email))
@@ -2458,6 +2462,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
