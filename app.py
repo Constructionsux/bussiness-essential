@@ -307,26 +307,82 @@ def view_draft(current_user_id, current_user_role):
         "currency": currency,
         "currency_symbol": currency_symbol,
     }), 200
-
-
+    
 @app.route("/api/view-clients", methods=["GET"])
 @token_required
 def view_clients(current_user_id, current_user_role):
     cursor = conn.cursor(dictionary=True, buffered=True)
 
+    # ---------------- CLIENTS + INVOICE AGGREGATES ----------------
     cursor.execute(
-        """
-        SELECT client_id AS id, 
-                client_name AS name, 
-                client_email AS email, 
-                client_phone AS phone
-        FROM clients
-        WHERE user_id = %s
-        """,
-        (current_user_id,)
+    """
+    SELECT 
+        client_id,
+        client_name AS name,
+        client_email AS email,
+        client_phone AS phone,
+        client_address AS address
+    FROM clients
+    WHERE user_id = %s
+    ORDER BY client_name ASC
+    """,
+    (current_user_id,)
     )
-    clients = cursor.fetchall()
 
+    clients_raw = cursor.fetchall()
+
+
+    cursor.execute(
+    """
+    SELECT
+        client_id,
+        COUNT(*) AS total_invoices,
+        COALESCE(
+            SUM(
+                CASE 
+                    WHEN status != 'paid' THEN total_amount
+                    ELSE 0
+                END
+            ), 0
+        ) AS outstanding_amount
+    FROM invoices
+    WHERE user_id = %s
+    GROUP BY client_id
+    """,
+    (current_user_id,)
+    )
+
+    invoice_aggregates_raw = cursor.fetchall()
+
+    invoice_map = {
+    row[0]: {
+        "total_invoices": row[1],
+        "outstanding": row[2]
+    }
+    for row in invoice_aggregates_raw
+    }
+
+    clients = []
+
+    for c in clients_raw:
+        client_id, name, email, phone, address = c
+
+        invoice_data = invoice_map.get(client_id, {
+            "total_invoices": 0,
+            "outstanding": 0
+        })
+        s_name = name[:2].upper()
+
+        clients.append({
+            "id": client_id,
+            "name": name,
+            "s_name": s_name,
+            "email": email,
+            "phone": phone,
+            "address": address,
+            "total_invoices": invoice_data["total_invoices"],
+            "outstanding": invoice_data["outstanding"]
+        })
     cursor.close()
 
     return jsonify({
@@ -2487,6 +2543,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
