@@ -659,7 +659,7 @@ def full_drafts(current_user_id, current_user_role, draft_id):
         FROM invoice_draft
         WHERE user_id =%s AND  draft_id=%s
         """,
-        (current_user_id, draf_id)
+        (current_user_id, draft_id)
     )
     draft = cursor.fetchone()
 
@@ -2640,6 +2640,7 @@ def add_clients(current_user_id, current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
