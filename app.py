@@ -2385,7 +2385,7 @@ def update_settings(current_user_id, current_user_role):
                 require_pin_for_delete=%s,
                 invoice_prefix=%s,
                 next_invoice_number=%s,
-                default-due_date=%s,
+                default_due_date=%s,
                 default_tax_rate=%s,
                 footer_note=%s,
                 currency=%s,
@@ -2543,6 +2543,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
