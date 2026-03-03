@@ -2538,11 +2538,67 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
             "address": "No 9 Lamina Estate, Ikorodu, Lagos"
         }
     }), 200
-    
+
+
+
+@app.route("/api/clients/add", methods=["POST"])
+@token_required
+def add_clients(current_user_id, current_user_role):
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "status": "error",
+                "message": "Invalid or missing JSON"
+            }), 40
+        
+        required_fields = ["name", "email", "phone", "address"]
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({
+                    "status": "error",
+                    "message": f"Missing field: {field}"
+                }), 400
+        
+        cursor.execute(
+            """
+            SELECT client_id FROM clients 
+            WHERE user_id =%s AND client_email =%s
+            """,
+            (current_user_id, data['email'])
+        )
+        client = cursor.fetchone()
+        if client:
+            return jsonify({"status": "error", "message": "Client already exist"}), 404
+        
+
+        cursor.execute(
+            """
+            INSERT INTO clients(name, email, phone, address)
+            VALUE(%s, %s, %s, %s)
+            """,
+            (data['name'], data['email'], data['phone'], data['address'])
+        )
+        conn.commit()
+
+        return jsonify({
+            "status": "error",
+            "message": "Client Added Successfully."
+        })
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            "status": "error",
+            "message": f"Database error: {e}",
+            "details": str(e)
+        }), 500
+   
+        
 
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
