@@ -475,17 +475,17 @@ def settings_page(current_user_id, current_user_role):
         "nextinvoicenumber": settings["next_invoice_number"],
         "defaultduedate": settings["default_due_date"],
         "defaulttaxrate": settings["default_tax_rate"],
-        "showtax": settings['show_tax'],
-        "showdiscount": settings["show_discount"],
+        "showtax": bool(settings['show_tax']),
+        "showdiscount": bool(ettings["show_discount"]),
         "footernote": settings['footer_note'],
         "currency": settings["currency"],
         "currencysymbol": settings['currency_symbol'],
         "timezone": settings["timezone"],
-        "emailnotifications": settings["email_notifications"],
-        "duedatereminder": settings["due_date_reminder"],
+        "emailnotifications": bool(settings["email_notifications"]),
+        "duedatereminder": bool(settings["due_date_reminder"]),
         "reminderdaysbefore": settings["reminder_days_before"],
         "autologoutminutes": settings["auto_logout_minutes"],
-        "requirepinfordelete": settings["require_pin_for_delete"],
+        "requirepinfordelete": bool(settings["require_pin_for_delete"]),
         "dateformate": settings["date_format"],
     }), 200
 
@@ -655,7 +655,7 @@ def full_drafts(current_user_id, current_user_role, draft_id):
             quantity,
             price,
             tax,
-            amount_paid,
+            amount_paid
         FROM invoice_draft
         WHERE user_id =%s AND  draft_id=%s
         """,
@@ -2640,6 +2640,7 @@ def add_clients(current_user_id, current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
