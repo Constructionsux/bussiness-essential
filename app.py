@@ -2643,8 +2643,7 @@ def add_clients(current_user_id, current_user_role):
 @token_required
 def update_profile_pic(current_user_id,current_user_role):
     try:
-        # Example saving file
-        file = request.files.get("profile_picture")  # Make sure your input type="file"
+        file = request.files.get("profile_picture")  
  
         if not file:
             return jsonify({
@@ -2652,7 +2651,6 @@ def update_profile_pic(current_user_id,current_user_role):
                 "message":"failed",
             })
         
-        filename = secure_filename(f"{current_user_id}_{file.filename}")  # safe filename
         result = cloudinary.uploader.upload(
             file,
             folder="profile_images",
@@ -2691,6 +2689,7 @@ def update_profile_pic(current_user_id,current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
