@@ -559,6 +559,31 @@ def get_profile(current_user_id, current_user_role):
         "company_logo": companylogourl,
     })
 
+@app.route("/api/transactions", methods=["GET"])
+@token_required
+def transation_page(current_user_id,current_user_role):
+    
+    cursor = conn.cursor(dictionary=True,buffered=True)
+    cursor.execute(
+        """
+        SELECT id, type, amount, reference AS title, status, paid_at AS date
+        FROM transactions
+        WHERE user_id=%s
+        """,
+        (current_user_id,)
+    )
+    transactions= cursor.fetchall()
+
+    return jsonify({
+        "status": "success",
+        "user": {
+            "id": current_user_id,
+            "role": current_user_role
+        },
+        "transactions": transactions,
+    })
+
+
 @app.route("/api/cust", methods=["POST"])
 def create_profile():
     data = request.get_json()
@@ -2462,6 +2487,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
