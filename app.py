@@ -616,7 +616,7 @@ def get_profile(current_user_id, current_user_role):
         "Profile_image": profile["profilepicurl"],
         "bio": bio,
         "username": username,
-        "company_logo": companylogourl,
+        "company_logo": profile["companylogourl"],
     })
 
 @app.route("/api/transactions", methods=["GET"])
@@ -2720,7 +2720,7 @@ def update_profile_pic(current_user_id,current_user_role):
         }), 500
 
 
-@app.route("/api/clients/update/<int:client_id>", methods=["GET"])
+@app.route("/api/clients/update/<int:client_id>", methods=["POST"])
 @token_required
 def update_client(current_user_id,current_user_role,client_id):
     data = request.get_json()
@@ -2819,6 +2819,7 @@ def update_company_logo(current_user_id,current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
