@@ -2184,11 +2184,11 @@ def create_invoice(current_user_id, current_user_role):
         user = cursor.fetchone()
 
         if user and user["push_token"]:
-        send_push_notification(
-            user["push_token"],
-            "Invoice Created",
-            f"Invoice #{invoice_number} created successfully."
-        )
+            send_push_notification(
+                user["push_token"],
+                "Invoice Created",
+                f"Invoice #{invoice_id} created successfully."
+            )
 
         return jsonify({
             "status": "success",
@@ -3084,9 +3084,146 @@ def delete_draft(current_user_id, current_user_role,draft_id):
         conn.rollback()
         print("Error deleting draft:", e)
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+
+@app.route("/api/delete-account", methods=["DELETE"])
+@token_required
+def delete_account(current_user_id, current_user_role):
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    data = request.get_json()
+
+    if not data or "password" not in data:
+        return jsonify({
+            "status": "error",
+            "message": "Password is required"
+        }), 400
+
+    password = data["password"]
+
+    try:
+        # ================= VERIFY USER PASSWORD =================
+        cursor.execute(
+            """
+            SELECT password_hash
+            FROM user_base
+            WHERE user_id=%s
+            """,
+            (current_user_id,)
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({
+                "status": "error",
+                "message": "User Not Found."
+            }), 400 
+    
+        current_password = hashlib.sha256(data["password"].encode()).hexdigest()
+
+        if current_password != user["password_hash"]:
+            return jsonify({
+                "status": "error",
+                "message": "Password Incorrect."
+            }), 400
+    
+
+        # ================= BEGIN TRANSACTION =================
+        conn.start_transaction()
+
+        # Delete invoice items first
+        cursor.execute(
+            """
+            DELETE ii FROM invoice_items ii
+            JOIN invoices i ON ii.invoice_id = i.id
+            WHERE i.user_id = %s
+            """,
+            (current_user_id,)
+        )
+
+        # Delete invoices
+        cursor.execute(
+            "DELETE FROM invoices WHERE user_id = %s",
+            (current_user_id,)
+        )
+
+        # Delete clients
+        cursor.execute(
+            "DELETE FROM clients WHERE user_id = %s",
+            (current_user_id,)
+        )
+
+        # Delete customer base (if exists)
+        cursor.execute(
+            "DELETE FROM cust_base WHERE user_id = %s",
+            (current_user_id,)
+        )
+
+        # Delete user settings
+        cursor.execute(
+            "DELETE FROM user_settings WHERE user_id = %s",
+            (current_user_id,)
+        )
+
+        # Delete Transactions
+        cursor.execute(
+            "DELETE FROM transactions WHERE user_id = %s",
+            (current_user_id,)
+        )
+
+        # Delete Log activity
+        cursor.execute(
+            "DELETE FROM log_activity WHERE user_id = %s",
+            (current_user_id,)
+        )
+
+        # Delete security Log
+        cursor.execute(
+            "DELETE FROM security_activity WHERE user_id=%s",
+            (current_user_id,)
+        )
+
+        cursor.execute(
+            "DELETE FROM notifications WHERE user_id=%s",
+            (current_user_id,)
+        )
         
+        # Delete Drafts
+        cursor.execute(
+            "DELETE FROM invoice_draft WHERE user_id = %s",
+            (current_user_id,)
+        )
+
+        # Finally delete user account
+        cursor.execute(
+            "DELETE FROM user_base WHERE user_id = %s",
+            (current_user_id,)
+        )
+
+        # ================= COMMIT =================
+        conn.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Account deleted successfully"
+        }), 200
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            "status": "error",
+            "message": "Failed to delete account",
+            "details": str(e)
+        }), 500
+
+    finally:
+        cursor.close()
+
+
 if __name__ == "__main__":
     app.run()
+
 
 
 
