@@ -606,16 +606,16 @@ def get_profile(current_user_id, current_user_role):
             "id": current_user_id,
             "role": current_user_role
         },
-        "fullname":data["fullname"],
-        "profilename": data["profilename"],
-        "address":data["address"],
-        "country": data["country"],
-        "phone": data["phone"],
-        "website": data["website"],
-        "alternateemail": data["alternateemail"],
+        "fullname":profile["fullname"],
+        "profilename": profile["profilename"],
+        "address":profile["address"],
+        "country": profile["country"],
+        "phone": profile["phone"],
+        "website": profile["website"],
+        "alternateemail": profile["alternateemail"],
         "Profile_image": profile["profilepicurl"],
-        "bio": data["bio"],
-        "username": data["username"],
+        "bio": profile["bio"],
+        "username": profile["username"],
         "company_logo": profile["companylogourl"],
     })
 
@@ -2944,6 +2944,7 @@ def delete_draft(current_user_id, current_user_role,draft_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
