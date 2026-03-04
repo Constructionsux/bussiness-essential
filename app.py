@@ -2288,6 +2288,33 @@ def save_draft(current_user_id, current_user_role):
             total,
             "pending"
         )
+  
+        # ================= CREATE NOTIFICATION =================
+        cursor.execute("""
+            INSERT INTO notifications (user_id, title, message, type)
+            VALUES (%s, %s, %s, %s)
+        """, (
+            current_user_id,
+            "Draft Created",
+            f"Draft for {client_name} was successfully created.",
+            "draft"
+        ))
+
+        conn.commit()
+
+        cursor.execute("""
+            SELECT push_token FROM user_base
+            WHERE user_id =%s
+        """, (current_user_id,))
+
+        user = cursor.fetchone()
+
+        if user and user[0]:
+            send_push_notification(
+                user[0],
+                "Draft Created",
+                f"Draft for {client_name}created successfully."
+            )
 
         cursor.close()
 
@@ -2443,6 +2470,32 @@ Need help? Contact our support team at {support_email}.
             html=True
         )
 
+        # ================= CREATE NOTIFICATION =================
+        cursor.execute("""
+            INSERT INTO notifications (user_id, title, message, type)
+            VALUES (%s, %s, %s, %s)
+        """, (
+            current_user_id,
+            "Changed App Pin",
+            f"You changed your app pin.",
+            "Pin"
+        ))
+
+        conn.commit()
+
+        cursor.execute("""
+            SELECT push_token FROM user_base
+            WHERE user_id =%s
+        """, (current_user_id,))
+
+        user = cursor.fetchone()
+
+        if user and user[0]:
+            send_push_notification(
+                user[0],
+                "Changed App Pin",
+                f"You changed your app pin."
+            )
         return jsonify({
             "status": "success",
             "message": "Pin updated successfully"
@@ -2606,6 +2659,33 @@ Need assistance? Contact us at {support_email}.
             change_password_html,
             html=True
         )
+
+        # ================= CREATE NOTIFICATION =================
+        cursor.execute("""
+            INSERT INTO notifications (user_id, title, message, type)
+            VALUES (%s, %s, %s, %s)
+        """, (
+            current_user_id,
+            "Changed Password",
+            f"You changed your password.",
+            "Pin"
+        ))
+
+        conn.commit()
+
+        cursor.execute("""
+            SELECT push_token FROM user_base
+            WHERE user_id =%s
+        """, (current_user_id,))
+
+        user = cursor.fetchone()
+
+        if user and user[0]:
+            send_push_notification(
+                user[0],
+                "Changed Password",
+                f"You changed your Password."
+            )
 
         return jsonify({
             "status": "success",
@@ -2836,6 +2916,33 @@ def add_clients(current_user_id, current_user_role):
             (current_user_id,data['name'], data['email'], data['phone'], data['address'])
         )
         conn.commit()
+
+        # ================= CREATE NOTIFICATION =================
+        cursor.execute("""
+            INSERT INTO notifications (user_id, title, message, type)
+            VALUES (%s, %s, %s, %s)
+        """, (
+            current_user_id,
+            "New Client Added",
+            f"Client {data['name']} added successfully.",
+            "Clients"
+        ))
+
+        conn.commit()
+
+        cursor.execute("""
+            SELECT push_token FROM user_base
+            WHERE user_id =%s
+        """, (current_user_id,))
+
+        user = cursor.fetchone()
+
+        if user and user[0]:
+            send_push_notification(
+                user[0],
+                "New Client Added",
+                f"Client {data['name']} added successfully"
+            )
 
         return jsonify({
             "status": "success",
@@ -3229,6 +3336,7 @@ def delete_account(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
