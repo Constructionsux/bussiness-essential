@@ -3131,7 +3131,6 @@ def delete_account(current_user_id, current_user_role):
     
 
         # ================= BEGIN TRANSACTION =================
-        conn.start_transaction()
 
         # Delete invoice items first
         cursor.execute(
@@ -3224,6 +3223,7 @@ def delete_account(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
