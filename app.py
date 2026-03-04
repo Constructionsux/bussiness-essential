@@ -756,6 +756,52 @@ def view_single_client(current_user_id, current_user_role, client_id):
         "invoices": invoices
     }), 200
 
+@app.route("/api/notifications", methods=["GET"])
+@token_required
+def get_notifications(current_user_id, current_user_role):
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT id, title, message, type, is_read, created_at
+        FROM notifications
+        WHERE user_id = %s
+        ORDER BY created_at DESC
+    """, (current_user_id,))
+
+    notifications = cursor.fetchall()
+    cursor.close()
+
+    return jsonify({
+        "status": "success",
+        "notifications": notifications
+    }), 200
+
+import requests
+
+def send_push_notification(expo_token, title, message):
+    requests.post(
+        "https://exp.host/--/api/v2/push/send",
+        json={
+            "to": expo_token,
+            "title": title,
+            "body": message,
+        },
+
+@app.route("/api/notifications/<int:notif_id>/read", methods=["PUT"])
+@token_required
+def mark_notification_read(current_user_id, current_user_role, notif_id):
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE notifications
+        SET is_read = TRUE
+        WHERE id = %s AND user_id = %s
+    """, (notif_id, current_user_id))
+
+    conn.commit()
+    cursor.close()
+
+    return jsonify({"status": "success"}), 200
 
 @app.route("/api/cust", methods=["POST"])
 def create_profile():
@@ -2082,6 +2128,32 @@ def create_invoice(current_user_id, current_user_role):
             total,
             status
         )
+        # ================= CREATE NOTIFICATION =================
+        cursor.execute("""
+            INSERT INTO notifications (user_id, title, message, type)
+            VALUES (%s, %s, %s, %s)
+        """, (
+            current_user_id,
+            "Invoice Created",
+            f"Invoice #{invoice_id} was successfully created.",
+            "invoice"
+        ))
+
+        conn.commit()
+
+        cursor.execute("""
+            SELECT push_token FROM user_base
+            WHERE user_id = %s
+        """, (current_user_id,))
+
+        user = cursor.fetchone()
+
+        if user and user["push_token"]:
+        send_push_notification(
+            user["push_token"],
+            "Invoice Created",
+            f"Invoice #{invoice_number} created successfully."
+        )
 
         return jsonify({
             "status": "success",
@@ -2980,6 +3052,7 @@ def delete_draft(current_user_id, current_user_role,draft_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
