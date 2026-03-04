@@ -2815,10 +2815,79 @@ def update_company_logo(current_user_id,current_user_role):
 
 
 
+@app.route("/api/profile/update", methods=["POST"])
+@token_required
+def update_profile(current_user_id,current_user_role):
+    data = request.get_json()
 
+    if not data:
+        return jsonify({
+            "status": "error",
+            "message": "Invalid or missing JSON"
+        }), 400
+
+    required_fields = [
+        "fullname",
+        "username",
+        "address",
+        "phone",
+        "alternateEmail",
+        "country",
+        "profileName",
+        "website",
+        "bio",
+    ]
+
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({
+                "status": "error",
+                "message": f"Missing field: {field}"
+            }), 400
+    
+    try:
+        cursor.execute(
+            """
+            UPDATE cust_base 
+            SET fullname=%s,
+                address=%s,
+                phone=%s,
+                alternateemail=%s,
+                country=%s,
+                profilename=%s,
+                website=%s,
+                bio=%s
+            WHERE user_id=%s
+            """,
+            (data["fullname"],data["address"],data["phone"],data["alternateEmail"],data["country"],data["profileName"],data["website"],data["bio"],current_user_id)
+        )
+
+        cursor.execute(
+            """
+            UPDATE user_base 
+            SET username=%s
+            WHERE user_id=%s
+            """,
+            (data['username'], current_user_id)
+        )
+
+        conn.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Updated Profile Successfully."
+        }), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            "status": "error",
+            "message": "Database error",
+            "details": str(e)
+        }), 500
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
