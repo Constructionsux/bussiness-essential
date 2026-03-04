@@ -721,6 +721,42 @@ def full_client(current_user_id,current_user_role,client_id):
     })
 
 
+@app.route("/api/client/<int:client_id>", methods=["GET"])
+@token_required
+def view_single_client(current_user_id, current_user_role, client_id):
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT client_id, client_name, client_email,
+               client_phone, client_address
+        FROM clients
+        WHERE client_id = %s AND user_id = %s
+    """, (client_id, current_user_id))
+
+    client = cursor.fetchone()
+
+    if not client:
+        return jsonify({"status": "error", "message": "Client not found"}), 404
+
+    # Fetch invoices for this client
+    cursor.execute("""
+        SELECT id, status, total_amount, due_date
+        FROM invoices
+        WHERE client_id = %s
+        ORDER BY id DESC
+    """, (client_id,))
+
+    invoices = cursor.fetchall()
+
+    cursor.close()
+
+    return jsonify({
+        "status": "success",
+        "client": client,
+        "invoices": invoices
+    }), 200
+
+
 @app.route("/api/cust", methods=["POST"])
 def create_profile():
     data = request.get_json()
@@ -2944,6 +2980,7 @@ def delete_draft(current_user_id, current_user_role,draft_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
