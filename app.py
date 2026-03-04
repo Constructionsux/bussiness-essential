@@ -606,16 +606,16 @@ def get_profile(current_user_id, current_user_role):
             "id": current_user_id,
             "role": current_user_role
         },
-        "fullname":fullname,
-        "profilename": profilename,
-        "address":address,
-        "country": country,
-        "phone": phone,
-        "website": website,
-        "alternateemail": alternateemail,
+        "fullname":data["fullname"],
+        "profilename": data["profilename"],
+        "address":data["address"],
+        "country": data["country"],
+        "phone": data["phone"],
+        "website": data["website"],
+        "alternateemail": data["alternateemail"],
         "Profile_image": profile["profilepicurl"],
-        "bio": bio,
-        "username": username,
+        "bio": data["bio"],
+        "username": data["username"],
         "company_logo": profile["companylogourl"],
     })
 
@@ -2918,6 +2918,7 @@ def update_profile(current_user_id,current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
