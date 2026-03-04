@@ -3154,6 +3154,12 @@ def delete_account(current_user_id, current_user_role):
             (current_user_id,)
         )
 
+        # Delete clients
+        cursor.execute(
+            "DELETE FROM wallet_base WHERE user_id = %s",
+            (current_user_id,)
+        )
+
         # Delete customer base (if exists)
         cursor.execute(
             "DELETE FROM cust_base WHERE user_id = %s",
@@ -3223,6 +3229,7 @@ def delete_account(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
