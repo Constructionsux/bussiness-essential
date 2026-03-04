@@ -309,7 +309,7 @@ def send_basic_plan_invoice_email(
         amount_paid, balance, notes
     )
 
-    app_logo = os.path.join("static", "media", "app logo.png")
+    app_logo = "https://res.cloudinary.com/dkb987i8w/image/upload/v1772108684/app_logo_ky1yis.png"
 
     html_body = f"""
     <div style="font-family:Arial, sans-serif; max-width:650px; margin:auto; border:1px solid #e0e0e0; padding:20px; background:#fdfdfd;">
@@ -380,7 +380,7 @@ def send_pro_plan_invoice_email(
         items, subtotal, tax, total,
         amount_paid, balance, notes
     )
-    app_logo = os.path.join("static", "media", "app logo.png")
+    app_logo = "https://res.cloudinary.com/dkb987i8w/image/upload/v1772108684/app_logo_ky1yis.png"
 
     html_body = f"""
     <div style="font-family:'Segoe UI', Arial, sans-serif; max-width:700px; margin:auto; border:1px solid #e0e0e0; padding:25px; background:#fff;">
@@ -630,6 +630,7 @@ def detect_location():
      city = data.get("city")
 
      return country, state, city
+
 
 
 
