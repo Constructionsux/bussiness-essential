@@ -2915,9 +2915,36 @@ def update_profile(current_user_id,current_user_role):
             "message": "Database error",
             "details": str(e)
         }), 500
+
+@app.route("/api/delete-draft/<int:draft_id>", methods=["DELETE"])
+@token_required
+def delete_draft(current_user_id, current_user_role,draft_id):
+
+    try:
+        cursor.execute(
+            """
+            DELETE from invoice_draft WHERE user_id=%s AND draft_id=%s
+            """,
+            (current_user_id,draft_id)
+        )
+        conn.commit()
+        
+        save_log_activity(
+            current_user_id,
+            "Invoice",
+            "Invoice Draft",
+            f"Draft `{draft_id}` Deleted Successfull."
+        )
+        return jsonify({"status": "success", "message": "Draft Deleted Successfully"})
+    except Exception as e:
+        # Rollback in case of error
+        conn.rollback()
+        print("Error deleting draft:", e)
+        return jsonify({"status": "error", "message": str(e)}), 500
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
