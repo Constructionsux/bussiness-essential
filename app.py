@@ -19,14 +19,14 @@ from werkzeug.utils import secure_filename
 
 
 
-conn = mysql.connector.connect(
+def get_db():
+    return mysql.connector.connect(
         host = os.getenv("DB_HOST"),
         user =  os.getenv("DB_USER"),
         password =  os.getenv("DB_PASSWORD"),
         database =  os.getenv("DB_NAME"), 
         port =  os.getenv("DB_PORT"),
 )
-cursor = conn.cursor()
 
 cloudinary.config(
     cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -72,7 +72,11 @@ def save_push(current_user_id, current_user_role):
     token = data["token"]
     print(token)
 
+    conn = get_gb()
+    cursor = conn.cursor()
+
     try:
+   
         cursor.execute(
             """
             UPDATE user_base
@@ -93,11 +97,16 @@ def save_push(current_user_id, current_user_role):
             "status": "error",
             "message": f"Error: {e}"
         }), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route("/api/dashboard", methods=["GET"])
 @token_required
 def dashboard(current_user_id, current_user_role):
 
+    
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute("""
@@ -174,6 +183,9 @@ def dashboard(current_user_id, current_user_role):
     )
     activities = cursor.fetchall()
 
+    cursor.close()
+    conn.close()
+
     return jsonify({
         "status": "success",
         "user": {
@@ -194,6 +206,7 @@ def dashboard(current_user_id, current_user_role):
 @app.route("/api/securitycenter", methods=["GET"])
 @token_required
 def security_center(current_user_id, current_user_role):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -211,7 +224,8 @@ def security_center(current_user_id, current_user_role):
             "status": "error",
             "message": "No settings found for this user."
         }), 400 
-
+    cursor.close()
+    conn.close()
     return jsonify({
         "status": "success",
         "user": {
@@ -224,7 +238,7 @@ def security_center(current_user_id, current_user_role):
 @app.route("/api/view-invoices", methods=["GET"])
 @token_required
 def view_invoice(current_user_id, current_user_role):
-
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     # Get invoices
@@ -265,6 +279,7 @@ def view_invoice(current_user_id, current_user_role):
     currency_symbol = settings["currency_symbol"]
 
     cursor.close()
+    conn.close()
 
     return jsonify({
         "status": "success",
@@ -283,6 +298,7 @@ def view_invoice(current_user_id, current_user_role):
 @app.route("/api/view-draft", methods=["GET"])
 @token_required
 def view_draft(current_user_id, current_user_role):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -332,6 +348,7 @@ def view_draft(current_user_id, current_user_role):
     currency_symbol = settings["currency_symbol"]
 
     cursor.close()
+    conn.close()
     
     return jsonify({
         "status": "success",
@@ -347,6 +364,7 @@ def view_draft(current_user_id, current_user_role):
 @app.route("/api/view-clients", methods=["GET"])
 @token_required
 def view_clients(current_user_id, current_user_role):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     # ================= CLIENTS =================
@@ -423,6 +441,7 @@ def view_clients(current_user_id, current_user_role):
         })
 
     cursor.close()
+    conn.commit()
 
     return jsonify({
         "status": "success",
@@ -436,6 +455,7 @@ def view_clients(current_user_id, current_user_role):
 @app.route("/api/view-profile", methods=["GET"])
 @token_required
 def view_profile(current_user_id, current_user_role):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -468,7 +488,7 @@ def view_profile(current_user_id, current_user_role):
 
     wallet_balance = wallet["wallet_balance"] if wallet else 0.0    
     cursor.close()
-
+    conn.close()
     return jsonify({
         "status": "success",
         "user": {
@@ -483,6 +503,7 @@ def view_profile(current_user_id, current_user_role):
 @app.route("/api/settings", methods=["GET"])
 @token_required
 def settings_page(current_user_id, current_user_role):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -503,7 +524,8 @@ def settings_page(current_user_id, current_user_role):
             "status": "error",
             "message": "An error occured while trying to fetch settings"
         }), 400
-
+    cursor.close()
+    conn.close()
     return jsonify({
         "status": "success",
         "user": {
@@ -532,6 +554,7 @@ def settings_page(current_user_id, current_user_role):
 @app.route("/api/payments", methods=["GET"])
 @token_required
 def payment_page(current_user_id, current_user_role):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     # ================= TOTAL RECEIVED =================
@@ -587,6 +610,8 @@ def payment_page(current_user_id, current_user_role):
     """, (current_user_id,))
     invoices = cursor.fetchall()
 
+    cursor.close()
+    conn.close()
     return jsonify({
         "status": "success",
         "user": {
@@ -604,6 +629,7 @@ def payment_page(current_user_id, current_user_role):
 @app.route("/api/profile", methods=["GET"])
 @token_required
 def get_profile(current_user_id, current_user_role):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True,buffered=True)
 
     cursor.execute(
@@ -632,10 +658,9 @@ def get_profile(current_user_id, current_user_role):
             "status": "error",
             "message": "Profile Not found."
         })
-    
-    fullname,profilename,address,country,phone,alternateemail,website,profilepicurl, bio, companylogourl, username = profile
-    print(profilepicurl)
-
+        
+    cursor.close()
+    conn.close()
     return jsonify({
         "status": "success",
         "user": {
@@ -658,7 +683,7 @@ def get_profile(current_user_id, current_user_role):
 @app.route("/api/transactions", methods=["GET"])
 @token_required
 def transation_page(current_user_id,current_user_role):
-    
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True,buffered=True)
     cursor.execute(
         """
@@ -669,6 +694,9 @@ def transation_page(current_user_id,current_user_role):
         (current_user_id,)
     )
     transactions= cursor.fetchall()
+
+    cursor.close()
+    conn.close()
 
     return jsonify({
         "status": "success",
@@ -683,6 +711,7 @@ def transation_page(current_user_id,current_user_role):
 @app.route("/api/drafts/<int:draft_id>", methods=["GET"])
 @token_required
 def full_drafts(current_user_id, current_user_role, draft_id):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -703,6 +732,8 @@ def full_drafts(current_user_id, current_user_role, draft_id):
     )
     draft = cursor.fetchone()
 
+    cursor.close()
+    conn.close()
     return jsonify({
         "status": "success",
         "user": {
@@ -725,6 +756,7 @@ def full_drafts(current_user_id, current_user_role, draft_id):
 @app.route("/api/clients/<int:client_id>", methods=["GET"])
 @token_required
 def full_client(current_user_id,current_user_role,client_id):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -740,6 +772,7 @@ def full_client(current_user_id,current_user_role,client_id):
         (current_user_id,client_id)
     )
     client = cursor.fetchone()
+    
 
     if not client:
         return jsonify({
@@ -747,6 +780,8 @@ def full_client(current_user_id,current_user_role,client_id):
             "message": "Client Not Found."
         })
 
+    cursor.close()
+    conn.close()
     return jsonify({
         "status": "success",
         "user": {
@@ -760,7 +795,8 @@ def full_client(current_user_id,current_user_role,client_id):
 @app.route("/api/client/<int:client_id>", methods=["GET"])
 @token_required
 def view_single_client(current_user_id, current_user_role, client_id):
-    cursor = conn.cursor(dictionary=True)
+    conn = get_gb()
+    cursor = conn.cursor(dictionary=True,buffered=True)
 
     cursor.execute("""
         SELECT client_id, client_name, client_email,
@@ -785,6 +821,7 @@ def view_single_client(current_user_id, current_user_role, client_id):
     invoices = cursor.fetchall()
 
     cursor.close()
+    conn.close()
 
     return jsonify({
         "status": "success",
@@ -795,7 +832,8 @@ def view_single_client(current_user_id, current_user_role, client_id):
 @app.route("/api/notifications", methods=["GET"])
 @token_required
 def get_notifications(current_user_id, current_user_role):
-    cursor = conn.cursor(dictionary=True)
+    conn = get_gb()
+    cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute("""
         SELECT id, title, message, type, is_read, created_at
@@ -806,6 +844,7 @@ def get_notifications(current_user_id, current_user_role):
 
     notifications = cursor.fetchall()
     cursor.close()
+    conn.close()
 
     return jsonify({
         "status": "success",
@@ -827,6 +866,7 @@ def send_push_notification(expo_token, title, message):
 @app.route("/api/notifications/<int:notif_id>/read", methods=["PUT"])
 @token_required
 def mark_notification_read(current_user_id, current_user_role, notif_id):
+    conn = get_gb()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -867,6 +907,9 @@ def create_profile():
         "status": "error",
         "message": "User not found"
         }), 404
+
+    conn = get_gb()
+    cursor = conn.cursor()
 
     # lOAD DATA FROM DATABASE TO ENSURE NO DUPLICATES
     cursor.execute("SELECT profilename FROM cust_base")
@@ -914,9 +957,12 @@ def create_profile():
         print(e)
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.route("/api/user", methods=["POST"])
@@ -944,7 +990,9 @@ def create_user():
                 "status": "error",
                 "message": f"Missing field: {field}"
             }), 400
-
+            
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         # Check duplicate username properly
         cursor.execute(
@@ -1000,8 +1048,11 @@ def create_user():
         print(e)
         return jsonify({
             "status": "error",
-            "message": f"Database error {e}"
+            "message": f"Error: {e}"
         }), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route("/api/verify", methods=["POST"])
 def verify_user():
@@ -1042,6 +1093,8 @@ def verify_user():
 
 @app.route("/api/pin", methods=["POST"])
 def add_pin():
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         data = request.get_json()
 
@@ -1079,7 +1132,8 @@ def add_pin():
             }), 404
 
         apppin = hashlib.sha256(data["AppPin"].encode()).hexdigest()
-  
+
+   
         cursor.execute(
             """
             UPDATE user_base
@@ -1099,9 +1153,12 @@ def add_pin():
         print(e)
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error {e}",
             "details": str(e)
         }), 500
+    finally:
+        cursor.close()
+        conn.close()
         
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
@@ -1151,7 +1208,9 @@ def complete_cust():
             overwrite= True
         )
         save_path = result['secure_url']
-
+        
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         cursor.execute("""
             UPDATE cust_base
@@ -1311,10 +1370,12 @@ def complete_cust():
         conn.rollback()
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
-
+    finally:
+        cursor.close()
+        conn.close()
 
 
 
@@ -1356,6 +1417,8 @@ def resend_verification():
 
 @app.route("/loginp", methods=["POST"])
 def verifylogin():
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         data = request.get_json()
 
@@ -1659,25 +1722,30 @@ def verifylogin():
 
     except Exception as e:
         conn.rollback()
-        print(e)
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
+    finally:
+        cursor.close()
+        conn.close()
+    
+    
 
 
 
 @app.route("/api/resetpass", methods=["POST"])
 def reset():
     data = request.get_json()
-    print("RESET PASS HIT")
 
     required_fields = ["email", "security_question", "security_answer"]
     for field in required_fields:
         if not data.get(field):
             return jsonify({"status": "error", "message": f"Missing {field}"}), 400
-
+            
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         cursor.execute(
             """
@@ -1790,11 +1858,15 @@ def reset():
         }), 200
 
     except Exception as e:
+        conn.rollback()
         return jsonify({
             "status": "error",
-            "message": "Server error",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
     
@@ -1822,6 +1894,8 @@ def savepassword():
             "message": "Password doesn't match."
         }), 400
 
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         cursor.execute(
             """
@@ -1964,9 +2038,12 @@ def savepassword():
         conn.rollback()
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 
@@ -2003,7 +2080,9 @@ def create_invoice(current_user_id, current_user_role):
         status = "pending"
     else:
         status = "unpaid"
-
+        
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         # Verify user
         cursor.execute(
@@ -2199,8 +2278,11 @@ def create_invoice(current_user_id, current_user_role):
 
     except Exception as e:
         conn.rollback()
-        print("Create invoice error:", e)
         return jsonify({"status": "error", "message": f"Server error: {e}"}), 500
+    finally:
+        cursor.close()
+        conn.close()
+        
 
 
 
@@ -2227,6 +2309,7 @@ def save_draft(current_user_id, current_user_role):
     if not all([client_name, client_email, invoice_date, due_date]):
         return jsonify({"status": "error", "message": "Missing required fields"}), 400
 
+    conn = get_gb()
     cursor = conn.cursor()
 
     try:
@@ -2325,13 +2408,19 @@ def save_draft(current_user_id, current_user_role):
 
     except Exception as e:
         conn.rollback()
+        return jsonify({
+        "status":"error",
+        "message": f"Error: {e}"
+        }), 500
+    finally:
         cursor.close()
-        print("Save draft error:", e)
+        conn.close()
 
 
 @app.route("/api/pin/update", methods=["POST"])
 @token_required
 def update_pin(current_user_id, current_user_role):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True)
     try:
         data = request.get_json()
@@ -2504,14 +2593,17 @@ Need help? Contact our support team at {support_email}.
         conn.rollback()
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
-
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route("/api/password/update", methods=["POST"])
 @token_required
 def update_password(current_user_id, current_user_role):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True)
     try:
         data = request.get_json()
@@ -2695,13 +2787,18 @@ Need assistance? Contact us at {support_email}.
         conn.rollback()
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route("/api/update-settings", methods=["POST"])
 @token_required
 def update_settings(current_user_id, current_user_role):
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         data = request.get_json()
         if not data:
@@ -2760,16 +2857,19 @@ def update_settings(current_user_id, current_user_role):
         }), 200
     except Exception as e:
         conn.rollback()
-        print(e)
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route("/api/invoices/<int:invoice_id>", methods=["GET"])
 @token_required
 def get_invoice(current_user_id, current_user_role, invoice_id):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     # ================= INVOICE =================
@@ -2850,6 +2950,8 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
 
     user_info = cursor.fetchone()
 
+    cursor.close()
+    conn.close()
     return jsonify({
         "status": "success",
         "auth_user": {   # renamed to avoid duplicate key
@@ -2880,6 +2982,8 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
 @app.route("/api/clients/add", methods=["POST"])
 @token_required
 def add_clients(current_user_id, current_user_role):
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         data = request.get_json()
         if not data:
@@ -2952,13 +3056,18 @@ def add_clients(current_user_id, current_user_role):
         conn.rollback()
         return jsonify({
             "status": "error",
-            "message": f"Database error: {e}",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route("/api/update/profilepic",methods=["POST"])
 @token_required
 def update_profile_pic(current_user_id,current_user_role):
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         file = request.files.get("profile_picture")  
  
@@ -2997,9 +3106,12 @@ def update_profile_pic(current_user_id,current_user_role):
         conn.rollback()
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error: {e]",
             "details": str(e)
         }), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.route("/api/clients/update/<int:client_id>", methods=["POST"])
@@ -3026,7 +3138,9 @@ def update_client(current_user_id,current_user_role,client_id):
                 "status": "error",
                 "message": f"Missing field: {field}"
             }), 400
-        
+
+    conn = get_gb()
+    cursor = conn.cursor()
     try: 
         cursor.execute(
             """
@@ -3049,10 +3163,12 @@ def update_client(current_user_id,current_user_role,client_id):
         conn.rollback()
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
-
+    finally:
+        cursor.close()
+        conn.close()
     
 @app.route("/api/update/companylogo", methods=["POST"])
 @token_required
@@ -3071,7 +3187,9 @@ def update_company_logo(current_user_id,current_user_role):
             overwrite= True
         )
         save_path = result['secure_url']
-    
+        
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         cursor.execute(
             """
@@ -3091,10 +3209,12 @@ def update_company_logo(current_user_id,current_user_role):
         conn.rollback()
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
-
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.route("/api/profile/update", methods=["POST"])
@@ -3126,7 +3246,9 @@ def update_profile(current_user_id,current_user_role):
                 "status": "error",
                 "message": f"Missing field: {field}"
             }), 400
-    
+            
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         cursor.execute(
             """
@@ -3163,14 +3285,18 @@ def update_profile(current_user_id,current_user_role):
         conn.rollback()
         return jsonify({
             "status": "error",
-            "message": "Database error",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
-
+    finally:
+        cursor.close()
+        conn.close()
+        
 @app.route("/api/delete-draft/<int:draft_id>", methods=["DELETE"])
 @token_required
 def delete_draft(current_user_id, current_user_role,draft_id):
-
+    conn = get_gb()
+    cursor = conn.cursor()
     try:
         cursor.execute(
             """
@@ -3190,14 +3316,16 @@ def delete_draft(current_user_id, current_user_role,draft_id):
     except Exception as e:
         # Rollback in case of error
         conn.rollback()
-        print("Error deleting draft:", e)
         return jsonify({"status": "error", "message": str(e)}), 500
-
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.route("/api/delete-account", methods=["DELETE"])
 @token_required
 def delete_account(current_user_id, current_user_role):
+    conn = get_gb()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     data = request.get_json()
@@ -3332,10 +3460,12 @@ def delete_account(current_user_id, current_user_role):
 
     finally:
         cursor.close()
+        conn.close()
 
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
