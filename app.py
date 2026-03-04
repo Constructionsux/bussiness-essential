@@ -1394,7 +1394,7 @@ def verifylogin():
                 "message": "User not found"
             }), 404
 
- 
+        user_id = user["user_id"]
         if user["locked"]:
             save_security_activity(
                 user_id=user_id,
@@ -3224,6 +3224,7 @@ def delete_account(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
