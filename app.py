@@ -8,7 +8,7 @@ import secrets
 import requests
 import mysql.connector
 import os
-from backend.utils import token_required,get_user_id,send_email, send_basic_plan_invoice_email,send_pro_plan_invoice_email,save_log_activity,generate_reference,detect_location
+from backend.utils import token_required,get_user_id,send_email, send_basic_plan_invoice_email,send_pro_plan_invoice_email,save_log_activity,generate_reference,detect_location,save_security_activity
 import jwt
 from functools import wraps
 import cloudinary
@@ -1278,6 +1278,14 @@ def verifylogin():
 
  
         if user["locked"]:
+            save_security_activity(
+                user_id=user_id,
+                type_="Login",
+                title="Login Failed",
+                description="Login failed. Account locked!",
+                severity="MEDIUM",
+                ip_address=get_client_ip(request)
+            )
             return jsonify({
                 "status": "error",
                 "message": f"Account locked: {user['lock_reason']}"
@@ -1303,9 +1311,25 @@ def verifylogin():
                         lock_reason=%s
                     WHERE user_id=%s
                 """, ("Too many failed login attempts", user["user_id"]))
+                save_security_activity(
+                    user_id=user_id,
+                    type_="Login",
+                    title="Login Failed",
+                    description=f"Login failed. Account locked,Too many failed login attempts",
+                    severity="HIGH",
+                    ip_address=get_client_ip(request)
+                )
 
             conn.commit()
 
+            save_security_activity(
+                user_id=user_id,
+                type_="Login",
+                title="Login Failed",
+                description=f"Login failed. Incorrect Password, attempts({new_attempts})",
+                severity="MEDIUM",
+                ip_address=get_client_ip(request)
+            )
             return jsonify({
                 "status": "error",
                 "message": "Incorrect password"
@@ -1366,7 +1390,7 @@ def verifylogin():
                 city = data.get("city", "Unknown City")
                 region = data.get("region", "Unknown Region")
                 country = data.get("country", "Unknown Country")
-                return city, region, country
+                return city, state, country
             except Exception:
                 return "Unknown City", "Unknown Region", "Unknown Country"
 
@@ -1384,7 +1408,7 @@ def verifylogin():
     
 
         login_ip = get_client_ip(request)
-        country, state, city = detect_location()
+        country, state, city = get_location_from_ip(login_ip)
         year = datetime.now().year
 
         login_html = f"""
@@ -1500,7 +1524,14 @@ def verifylogin():
         )
 
 
-     
+        save_security_activity(
+            user_id=user_id,
+            type_="account",
+            title="User Login",
+            description=f"A login into this app was noticed on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.",
+            severity="LOW",
+            ip_address=login_ip
+        )
         return jsonify({
             "status": "success",
             "message": "Login successful",
@@ -2887,6 +2918,7 @@ def update_profile(current_user_id,current_user_role):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
