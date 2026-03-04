@@ -27,14 +27,15 @@ load_dotenv()
 
 CONFIG_FILE = "config.json"
 
-conn = mysql.connector.connect(
+
+def get_db():
+    return mysql.connector.connect(
         host = os.getenv("DB_HOST"),
         user =  os.getenv("DB_USER"),
         password =  os.getenv("DB_PASSWORD"),
         database =  os.getenv("DB_NAME"), 
         port =  os.getenv("DB_PORT"),
 )
-cursor = conn.cursor()
 
 
 
@@ -113,6 +114,8 @@ def send_email_async(recipient: str, subject: str, body: str, html: bool=False, 
 
     
 def get_user_id(username):
+     conn = get_db()
+     cursor = conn.cursor()
      cursor.execute(
           """
           SELECT user_id
@@ -122,6 +125,8 @@ def get_user_id(username):
          (username,)
      )
      user = cursor.fetchone()
+     cursor.close()
+     conn.close()
 
      return user[0] if user else None
 
@@ -558,6 +563,8 @@ def generate_reference(invoice_prefix):
 
 
 def save_log_activity(user_id, type_, title, description, amount: Optional[float] = None, status: Optional[str] = None):
+     conn = get_db()
+     cursor = conn.cursor()
      if not amount and status:
           cursor.execute(
                "INSERT INTO log_activity (user_id, type, title, description) VALUES (%s,%s,%s,%s)",
@@ -570,14 +577,20 @@ def save_log_activity(user_id, type_, title, description, amount: Optional[float
      )
 
      conn.commit()
+     cursor.close()
+     conn.close()
 
 def save_security_activity(user_id, type_, title, description,severity, ip_address):
-    cursor.execute(
+     conn = get_db()
+     cursor = conn.cursor()
+     cursor.execute(
         "INSERT INTO security_activity (user_id, type, title, description,severity,ip_address) VALUES (%s,%s,%s,%s,%s,%s)",
         (user_id, type_, title, description,severity,ip_address)
-    )
+     )
 
-    conn.commit()
+     conn.commit()
+     cursor.close()
+     conn.close()
 
 def parse_user_agent(user_agent_string):
     ua = parse(user_agent_string)
@@ -630,6 +643,7 @@ def detect_location():
      city = data.get("city")
 
      return country, state, city
+
 
 
 
