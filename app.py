@@ -58,6 +58,41 @@ SECURITY_URL = "https://yourapp.com/security-settings"
 DASHBOARD_URL = "https://yourapp.com/dashboard"
 SECRET_KEY = os.getenv("SECRET_KEY")
 
+@app.route("/api/save-push-token", methods=["POST"])
+@token_required
+def save_push(current_user_id, current_user_role):
+    data = request.get_json()
+
+    if not data or "token" not in data:
+        return jsonify({
+            "status": "error",
+            "message": "Token is required"
+        }), 400
+
+    token = data["token"]
+
+    try:
+        cursor.execute(
+            """
+            UPDATE user_base
+            SET push_token=%s
+            WHERE user_id=%s
+            """,
+            (token, current_user_id)
+        )
+        conn.commit()
+        return jsonify({
+            "status": "success",
+            "message": "Push token saved successfully"
+        }), 200
+    except Exception as e:
+        conn.rollback()
+        print(e)
+        return jsonify({
+            "status": "error",
+            "message": f"Error: {e}"
+        }), 500
+
 @app.route("/api/dashboard", methods=["GET"])
 @token_required
 def dashboard(current_user_id, current_user_role):
@@ -786,6 +821,7 @@ def send_push_notification(expo_token, title, message):
             "title": title,
             "body": message,
         },
+    )
 
 @app.route("/api/notifications/<int:notif_id>/read", methods=["PUT"])
 @token_required
@@ -1042,8 +1078,7 @@ def add_pin():
             }), 404
 
         apppin = hashlib.sha256(data["AppPin"].encode()).hexdigest()
-        print(user_id)
-        print(apppin)
+  
         cursor.execute(
             """
             UPDATE user_base
@@ -3052,6 +3087,7 @@ def delete_draft(current_user_id, current_user_role,draft_id):
         
 if __name__ == "__main__":
     app.run()
+
 
 
 
