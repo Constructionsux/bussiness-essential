@@ -3106,7 +3106,7 @@ def update_profile_pic(current_user_id,current_user_role):
         conn.rollback()
         return jsonify({
             "status": "error",
-            "message": f"Error: {e]",
+            "message": f"Error: {e}",
             "details": str(e)
         }), 500
     finally:
@@ -3465,6 +3465,7 @@ def delete_account(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
