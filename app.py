@@ -70,6 +70,7 @@ def save_push(current_user_id, current_user_role):
         }), 400
 
     token = data["token"]
+    print(token)
 
     try:
         cursor.execute(
@@ -2178,14 +2179,14 @@ def create_invoice(current_user_id, current_user_role):
 
         cursor.execute("""
             SELECT push_token FROM user_base
-            WHERE user_id = %s
+            WHERE user_id =%s
         """, (current_user_id,))
 
         user = cursor.fetchone()
 
-        if user and user["push_token"]:
+        if user and user[0]:
             send_push_notification(
-                user["push_token"],
+                user[0],
                 "Invoice Created",
                 f"Invoice #{invoice_id} created successfully."
             )
@@ -3223,6 +3224,7 @@ def delete_account(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
