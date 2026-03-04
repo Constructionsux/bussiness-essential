@@ -571,6 +571,14 @@ def save_log_activity(user_id, type_, title, description, amount: Optional[float
 
      conn.commit()
 
+def save_security_activity(user_id, type_, title, description,severity, ip_address):
+    cursor.execute(
+        "INSERT INTO security_activity (user_id, type, title, description,severity,ip_address) VALUES (%s,%s,%s,%s,%s,%s)",
+        (user_id, type_, title, description,severity,ip_address)
+    )
+
+    conn.commit()
+
 def parse_user_agent(user_agent_string):
     ua = parse(user_agent_string)
 
@@ -622,6 +630,7 @@ def detect_location():
      city = data.get("city")
 
      return country, state, city
+
 
 
 
