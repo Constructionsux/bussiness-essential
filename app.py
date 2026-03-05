@@ -900,9 +900,38 @@ def mark_notification_read(current_user_id, current_user_role, notif_id):
 
     conn.commit()
     cursor.close()
+    conn.close()
 
     return jsonify({"status": "success"}), 200
 
+@app.route("/api/share", methods=["GET"])
+@token_required
+def get_referrals(current_user_id, current_user_role):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    cursor.execute(
+        """
+        SELECT referral_code
+        FROM user_base
+        WHERE user_id=%s
+        """,
+        (current_user_id,)
+    )
+    referral_code = cursor.fetchone()["referral_code"]
+
+    cursor.close()
+    conn.close()
+    return jsonify({
+        "status": "success",
+        "user": {
+            "id": current_user_id,
+            "role": current_user_role
+        },
+        "referral_code": referral_code,
+    })
+    
+    
 @app.route("/api/cust", methods=["POST"])
 def create_profile():
     data = request.get_json()
@@ -3555,6 +3584,7 @@ def add_feedback(current_user_id, current_user_role):
     
 if __name__ == "__main__":
     app.run()
+
 
 
 
