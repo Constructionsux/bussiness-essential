@@ -3529,7 +3529,7 @@ def add_feedback(current_user_id, current_user_role):
         cursor.execute(
             """
             INSERT INTO feedback(user_id,category,message,email)
-            VALUES(%s, %s, %s, %s, %s)
+            VALUES(%s, %s, %s, %s)
             """,
             (current_user_id,data["category"],data["message"],data["email"])
         )
@@ -3555,6 +3555,7 @@ def add_feedback(current_user_id, current_user_role):
     
 if __name__ == "__main__":
     app.run()
+
 
 
 
