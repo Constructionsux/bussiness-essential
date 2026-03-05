@@ -2981,77 +2981,88 @@ Need assistance? Contact us at {support_email}.
         cursor.close()
         conn.close()
 
+
+ALLOWED_SETTINGS = {
+    "invoice_prefix": "invoice_prefix",
+    "next_invoice_number": "next_invoice_number",
+    "default_due_date": "default_due_date",
+    "default_tax_rate": "default_tax_rate",
+    "show_tax": "show_tax",
+    "show_discount": "show_discount",
+    "footer_note": "footer_note",
+
+    "currency": "currency",
+    "currency_symbol": "currency_symbol",
+    "timezone": "timezone",
+    "date_format": "date_format",
+
+    "email_notifications": "email_notifications",
+    "due_date_reminder": "due_date_reminder",
+    "reminder_days_before": "reminder_days_before",
+
+    "theme": "theme",
+    "language": "language",
+
+    "auto_logout_minutes": "auto_logout_minutes",
+    "require_pin_for_delete": "require_pin_for_delete"
+}
+
 @app.route("/api/update-settings", methods=["POST"])
 @token_required
-def update_settings(current_user_id, current_user_role):
+def update_settings(current_user_id,current_user_role):
+
+    if not request.is_json:
+        return jsonify({"status": "error", "message": "Invalid JSON"}), 400
+
+    data = request.get_json()
+
+    key = data.get("key")
+    value = data.get("value")
+
+    if not key or key not in ALLOWED_SETTINGS:
+        return jsonify({
+            "status": "error",
+            "message": "Invalid setting key"
+        }), 400
+
+    column = ALLOWED_SETTINGS[key]
+
     conn = get_db()
     cursor = conn.cursor()
+
     try:
-        data = request.get_json()
-        if not data:
-            return jsonify({
-                "status": "error",
-                "message": "Invalid or missing JSON"
-            }), 400
-        
         cursor.execute(
-            """
+            f"""
             UPDATE user_settings
-            SET 
-                show_tax=%s,
-                show_discount=%s,
-                email_notifications=%s,
-                due_date_reminder=%s,
-                require_pin_for_delete=%s,
-                invoice_prefix=%s,
-                next_invoice_number=%s,
-                default_due_date=%s,
-                default_tax_rate=%s,
-                footer_note=%s,
-                currency=%s,
-                currency_symbol=%s,
-                timezone=%s,
-                reminder_days_before=%s,
-                auto_logout_minutes=%s,
-                date_format=%s
+            SET {column} = %s,
+                updated_at = NOW()
             WHERE user_id = %s
             """,
-            (
-                data.get("showTax"),
-                data.get("enableDiscount"),
-                data.get("emailNotifications"),
-                data.get("dueReminder"),
-                data.get("requirePin"),
-                data.get("invoicePrefix", ""),
-                data.get("nextInvoiceNumber", 0),
-                data.get("defaultDueDate", 0),
-                data.get("defaultTaxRate", 0),
-                data.get("invoiceFooterNote", ""),
-                data.get("currency", ""),
-                data.get("currencySymbol", ""),
-                data.get("timeZone", ""),
-                data.get("reminderDays", 0),
-                data.get("autoLogout", 0),
-                data.get("dateFormat", ""),
-                current_user_id
-            )
+            (value, current_user_id)
         )
         conn.commit()
 
-        return jsonify({
-            "status": "success",
-            "message": "Settings updated successfully"
-        }), 200
     except Exception as e:
         conn.rollback()
         return jsonify({
             "status": "error",
-            "message": f"Error: {e}",
-            "details": str(e)
+            "message": "Failed to update setting"
         }), 500
     finally:
         cursor.close()
         conn.close()
+
+    save_log_activity(
+        current_user_id,
+        "account",
+        "Update Settings",
+        f"Upated {column} successfully"
+    )
+    return jsonify({
+        "status": "success",
+        "key": key,
+        "value": value
+    }), 200
 
 @app.route("/api/invoices/<int:invoice_id>", methods=["GET"])
 @token_required
@@ -3693,6 +3704,7 @@ def add_feedback(current_user_id, current_user_role):
     
 if __name__ == "__main__":
     app.run()
+
 
 
 
