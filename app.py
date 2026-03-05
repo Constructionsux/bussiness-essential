@@ -251,6 +251,19 @@ def dashboard(current_user_id, current_user_role):
     if not settings:
         return jsonify({"error": "Settings not found"}), 404
 
+    cursor.execute(
+        """
+        SELECT plan
+        FROM user_base
+        WHERE user_id=%s
+        """,
+        (current_user_id,)
+    )
+    user = cursor.fetchone()
+    if not user:
+        return jsonify({"error":"User not found"}), 404
+    
+
     # Wallet
     cursor.execute("""
         SELECT wallet_balance
@@ -291,6 +304,7 @@ def dashboard(current_user_id, current_user_role):
         "currency_symbol": settings["currency_symbol"],
         "wallet_balance": wallet["wallet_balance"],
         "activities": activities,
+        "plan": user["plan"],
     }), 200
 
 @app.route("/api/securitycenter", methods=["GET"])
@@ -3663,6 +3677,7 @@ def add_feedback(current_user_id, current_user_role):
     
 if __name__ == "__main__":
     app.run()
+
 
 
 
