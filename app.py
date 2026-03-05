@@ -810,6 +810,20 @@ def transation_page(current_user_id,current_user_role):
         (current_user_id,)
     )
     transactions= cursor.fetchall()
+    
+    cursor.execute("""
+        SELECT COALESCE(SUM(amount), 0) AS total
+        FROM transactions
+        WHERE user_id=%s AND type=%s
+    """, (current_user_id, "income"))
+    total_in = cursor.fetchone()["total"]
+
+    cursor.execute("""
+        SELECT COALESCE(SUM(amount), 0) AS total
+        FROM transactions
+        WHERE user_id=%s AND type=%s
+    """, (current_user_id, "expense"))
+    total_out = cursor.fetchone()["total"]
 
     cursor.close()
     conn.close()
@@ -821,6 +835,8 @@ def transation_page(current_user_id,current_user_role):
             "role": current_user_role
         },
         "transactions": transactions,
+        "totalIncome": total_in,
+        "totalExpense": total_out,
     })
 
 
@@ -3677,6 +3693,7 @@ def add_feedback(current_user_id, current_user_role):
     
 if __name__ == "__main__":
     app.run()
+
 
 
 
