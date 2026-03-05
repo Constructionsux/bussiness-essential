@@ -18,7 +18,8 @@ from backend.utils import (
     generate_reference,
     detect_location,
     save_security_activity,
-    check_overdue_invoices
+    check_overdue_invoices,
+    generate_referral_code
 )
 import jwt
 from functools import wraps
@@ -1027,13 +1028,26 @@ def create_user():
                 "message": "Username already exists"
             }), 400
 
+        referral_code = generate_referral_code()
+
+        ref_code_used = data["ReferralCode"]
+        cursor.execute("""
+            SELECT user_id FROM user_base WHERE referral_code=%s
+        """, (ref_code_used,))
+
+        referrer = cursor.fetchone()
+
+        if referrer:
+            referred_by = ref_code_used
+        else:
+            referred_by = None
         # Insert user
         cursor.execute("""
             INSERT INTO user_base
             (username, email, password_hash, sequrity_question, sequrity_answer_hash,
              failed_attempts, last_login, last_failed_login, trial_ends_at,
-             locked, lock_reason, active)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+             locked, lock_reason, active,referral_code,referred_by)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s)
         """, (
             data["username"],
             data["email"],
@@ -1046,7 +1060,9 @@ def create_user():
             (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S"),
             False,
             "",
-            True
+            True,
+            referral_code,
+            referred_by
         ))
 
         conn.commit()
@@ -1465,7 +1481,7 @@ def verifylogin():
 
         cursor.execute("""
             SELECT user_id, password_hash, locked, 
-                   failed_attempts, email, lock_reason, trial_ends_at, email, role
+                   failed_attempts, email, lock_reason, trial_ends_at, email, role, referral_code
             FROM user_base
             WHERE username=%s
             LIMIT 1
@@ -1523,6 +1539,17 @@ def verifylogin():
                     ip_address=get_client_ip(request)
                 )
 
+            if user["referral_code"] is None:
+                referral_code = generate_referral_code()
+
+                cursor.execute(
+                """
+                UPDATE user_base
+                SET referral_code=%s
+                WHERE user_id=%s
+                """,
+                (referral_code,user_id)
+                )
             conn.commit()
 
             save_security_activity(
@@ -3487,6 +3514,7 @@ def delete_account(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
