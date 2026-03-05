@@ -28,7 +28,7 @@ import cloudinary.uploader
 import cloudinary.api
 import os
 from werkzeug.utils import secure_filename
-
+import requests
 
 
 def get_db():
@@ -91,6 +91,51 @@ def pay_page(plan,amount,user_id):
         email=email,
         user_id=user_id
     )
+
+
+@app.route("/verify-payment", methods=["POST"])
+def verify_payment():
+    data = request.get_json()
+    reference = data.get("reference")
+    conn = get_db()
+    cursor = conn.cursor()
+
+    headers = {
+        "Authorization": "Bearer sk_test_3efbeacd55d65d3fbcd6bfac95380aea329ca20e"
+    }
+
+    url = f"https://api.paystack.co/transaction/verify/{reference}"
+
+    response = requests.get(url, headers=headers)
+    result = response.json()
+
+    if result["data"]["status"] == "success":
+        
+        # ✅ Payment verified
+
+        cursor.execute(
+            """
+            UPDATE user_base 
+            SET plan=%s
+            WHERE user_id=%s
+            """,
+            (data["plan"], data["user_id"])
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "status": "success",
+            "message": "Payment verified successfully"
+        }), 200
+
+    else:
+        return jsonify({
+            "status": "error",
+            "message": "Payment not verified"
+        }), 400
+
 
 @app.route("/cron/check-overdue", methods=["GET"])
 def cron_check_overdue():
@@ -280,7 +325,7 @@ def security_center(current_user_id, current_user_role):
         "setting": setting,
     })
 
-@app.route("/api/id", methods["GET"])
+@app.route("/api/id", methods=["GET"])
 @token_required
 def view_id(current_user_id, current_user_role):
     return jsonify({
@@ -3618,6 +3663,7 @@ def add_feedback(current_user_id, current_user_role):
     
 if __name__ == "__main__":
     app.run()
+
 
 
 
