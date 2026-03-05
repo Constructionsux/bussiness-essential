@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upgrade Plan</title>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 350px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        .price {
+            font-size: 28px;
+            color: #009879;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: #009879;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+    <link rel="icon" type="image/svg+xml" href="/static/media/app logo.png"/>
+</head>
+<body>
+
+<div class="card" id="card" data-plan="{{ plan }}" data-amount=" {{ amount }}" data-email="{{ email }}" data-userid="{{ user_id }}">
+    <h2>{{ plan }} Plan</h2>
+    <p class="price">₦{{ amount }} / month</p>
+    <button onclick="payWithPaystack()">Pay Now</button>
+</div>
+
+<script>
+    function payWithPaystack() {
+        const card = document.getElementById("card");
+        const email = card?.dataset.email;
+        const plan = card?.dataset.plan;
+        const user_id = card?.dataset.userid;
+        const amount = card?.dataset.amount;
+
+        let handler = PaystackPop.setup({
+            key: 'pk_test_82f461e2353df26a67897a5611c412129cc8d30f',
+            email: email,
+            amount: amount * 100, // amount in kobo (₦10,000 = 1000000)
+            currency: "NGN",
+            ref: 'INV_' + Math.floor((Math.random() * 1000000000) + 1),
+
+            callback: function(response) {
+                alert("Payment successful! Ref: " + response.reference);
+
+                // Send reference to backend for verification
+                fetch("https://bussiness-essential-zjbi.onrender.com/verify-payment", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        reference: response.reference,
+                        plan,
+                        user_id
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data);
+                });
+            },
+
+            onClose: function() {
+                alert("Transaction cancelled.");
+            }
+        });
+
+        handler.openIframe();
+    }
+</script>
+
+</body>
+</html>
