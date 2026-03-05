@@ -63,12 +63,15 @@
         const email = card?.dataset.email;
         const plan = card?.dataset.plan;
         const user_id = card?.dataset.userid;
-        const amount = card?.dataset.amount;
+        let amountString = card?.dataset.amount;
+        let cleanAmount = amountString.replace(/,/g, "");
+        let amountKobo = parseInt(cleanAmount) * 100;
+        
 
         let handler = PaystackPop.setup({
             key: 'pk_test_82f461e2353df26a67897a5611c412129cc8d30f',
             email: email,
-            amount: amount * 100, // amount in kobo (₦10,000 = 1000000)
+            amount: amountKobo, // amount in kobo (₦10,000 = 1000000)
             currency: "NGN",
             ref: 'INV_' + Math.floor((Math.random() * 1000000000) + 1),
 
@@ -103,4 +106,5 @@
 </script>
 
 </body>
+
 </html>
