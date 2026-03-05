@@ -3511,9 +3511,51 @@ def delete_account(current_user_id, current_user_role):
         cursor.close()
         conn.close()
 
+@app.route("/api/feedback/add", methods=["PUT"])
+@token_required
+def add_feedback(current_user_id, current_user_role):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True, buffered=True)
 
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "status": "error",
+            "message": "Invalid Data."
+        }), 400
+
+    try:
+        cursor.execute(
+            """
+            INSERT INTO feedback(user_id,category,message,email)
+            VALUES(%s, %s, %s, %s, %s)
+            """,
+            (current_user_id,data["category"],data["message"],data["email"])
+        )
+        conn.commit()
+        
+        return jsonify({
+            "status": "success",
+            "message": "Feedback Sent. Thank You!"
+        }), 200
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            "status": "error",
+            "message": f"Error: {e}",
+            "details": str(e)
+        }), 500
+
+    finally:
+        cursor.close()
+        conn.close()       
+
+    
 if __name__ == "__main__":
     app.run()
+
 
 
 
