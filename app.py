@@ -8,7 +8,18 @@ import secrets
 import requests
 import mysql.connector
 import os
-from backend.utils import token_required,get_user_id,send_email, send_basic_plan_invoice_email,send_pro_plan_invoice_email,save_log_activity,generate_reference,detect_location,save_security_activity
+from backend.utils import ( 
+    token_required,
+    get_user_id,
+    send_email, 
+    send_basic_plan_invoice_email,
+    send_pro_plan_invoice_email,
+    save_log_activity,
+    generate_reference,
+    detect_location,
+    save_security_activity,
+    check_overdue_invoices
+)
 import jwt
 from functools import wraps
 import cloudinary
@@ -57,6 +68,17 @@ APP_LOGO_URL = "https://res.cloudinary.com/dkb987i8w/image/upload/v1772108684/ap
 SECURITY_URL = "https://yourapp.com/security-settings"
 DASHBOARD_URL = "https://yourapp.com/dashboard"
 SECRET_KEY = os.getenv("SECRET_KEY")
+
+@app.route("/cron/check-overdue", methods=["GET"])
+def cron_check_overdue():
+    secret = request.args.get("Key")
+
+    if secret != os.getenv("CRON_SECRET"):
+        return jsonify({"error":"Unathorized"}), 403
+        
+    check_overdue_invoices()
+    return jsonify({"status":"success"})
+    
 
 @app.route("/api/save-push-token", methods=["POST"])
 @token_required
@@ -3465,6 +3487,7 @@ def delete_account(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
