@@ -1,5 +1,5 @@
 from flask import (
-    Flask, request, jsonify, session,redirect, Blueprint
+    Flask, request, jsonify, session,redirect, Blueprint,render_template
 )
 from flask_cors import CORS
 import hashlib
@@ -69,6 +69,28 @@ APP_LOGO_URL = "https://res.cloudinary.com/dkb987i8w/image/upload/v1772108684/ap
 SECURITY_URL = "https://yourapp.com/security-settings"
 DASHBOARD_URL = "https://yourapp.com/dashboard"
 SECRET_KEY = os.getenv("SECRET_KEY")
+@app.route("/api/billings/<string:plan>/<int:amount>/<int:user_id>", methods=["GET"])
+def pay_page(plan,amount,user_id):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        """
+        SELECT email
+        FROM user_base
+        WHERE user_id=%s
+        """,
+        (user_id,)
+    )
+    email = cursor.fetchone()['email']
+    cursor.close()
+    conn.close()
+    return render_template(
+        "pay.html",
+        plan=plan,
+        amount=f'{amount:,.2f}',
+        email=email,
+        user_id=user_id
+    )
 
 @app.route("/cron/check-overdue", methods=["GET"])
 def cron_check_overdue():
@@ -257,6 +279,18 @@ def security_center(current_user_id, current_user_role):
         },
         "setting": setting,
     })
+
+@app.route("/api/id", methods["GET"])
+@token_required
+def view_id(current_user_id, current_user_role):
+    return jsonify({
+        "status": "success",
+        "user": {
+            "id": current_user_id,
+            "role": current_user_role
+        },
+    })
+
 
 @app.route("/api/view-invoices", methods=["GET"])
 @token_required
@@ -3584,6 +3618,7 @@ def add_feedback(current_user_id, current_user_role):
     
 if __name__ == "__main__":
     app.run()
+
 
 
 
