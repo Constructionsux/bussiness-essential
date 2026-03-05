@@ -72,7 +72,7 @@ def save_push(current_user_id, current_user_role):
     token = data["token"]
     print(token)
 
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
 
     try:
@@ -106,7 +106,7 @@ def save_push(current_user_id, current_user_role):
 def dashboard(current_user_id, current_user_role):
 
     
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute("""
@@ -206,7 +206,7 @@ def dashboard(current_user_id, current_user_role):
 @app.route("/api/securitycenter", methods=["GET"])
 @token_required
 def security_center(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -238,7 +238,7 @@ def security_center(current_user_id, current_user_role):
 @app.route("/api/view-invoices", methods=["GET"])
 @token_required
 def view_invoice(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     # Get invoices
@@ -298,7 +298,7 @@ def view_invoice(current_user_id, current_user_role):
 @app.route("/api/view-draft", methods=["GET"])
 @token_required
 def view_draft(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -364,7 +364,7 @@ def view_draft(current_user_id, current_user_role):
 @app.route("/api/view-clients", methods=["GET"])
 @token_required
 def view_clients(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     # ================= CLIENTS =================
@@ -455,7 +455,7 @@ def view_clients(current_user_id, current_user_role):
 @app.route("/api/view-profile", methods=["GET"])
 @token_required
 def view_profile(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -503,7 +503,7 @@ def view_profile(current_user_id, current_user_role):
 @app.route("/api/settings", methods=["GET"])
 @token_required
 def settings_page(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -554,7 +554,7 @@ def settings_page(current_user_id, current_user_role):
 @app.route("/api/payments", methods=["GET"])
 @token_required
 def payment_page(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     # ================= TOTAL RECEIVED =================
@@ -629,7 +629,7 @@ def payment_page(current_user_id, current_user_role):
 @app.route("/api/profile", methods=["GET"])
 @token_required
 def get_profile(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True,buffered=True)
 
     cursor.execute(
@@ -683,7 +683,7 @@ def get_profile(current_user_id, current_user_role):
 @app.route("/api/transactions", methods=["GET"])
 @token_required
 def transation_page(current_user_id,current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True,buffered=True)
     cursor.execute(
         """
@@ -711,7 +711,7 @@ def transation_page(current_user_id,current_user_role):
 @app.route("/api/drafts/<int:draft_id>", methods=["GET"])
 @token_required
 def full_drafts(current_user_id, current_user_role, draft_id):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -756,7 +756,7 @@ def full_drafts(current_user_id, current_user_role, draft_id):
 @app.route("/api/clients/<int:client_id>", methods=["GET"])
 @token_required
 def full_client(current_user_id,current_user_role,client_id):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute(
@@ -795,7 +795,7 @@ def full_client(current_user_id,current_user_role,client_id):
 @app.route("/api/client/<int:client_id>", methods=["GET"])
 @token_required
 def view_single_client(current_user_id, current_user_role, client_id):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True,buffered=True)
 
     cursor.execute("""
@@ -832,7 +832,7 @@ def view_single_client(current_user_id, current_user_role, client_id):
 @app.route("/api/notifications", methods=["GET"])
 @token_required
 def get_notifications(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     cursor.execute("""
@@ -866,7 +866,7 @@ def send_push_notification(expo_token, title, message):
 @app.route("/api/notifications/<int:notif_id>/read", methods=["PUT"])
 @token_required
 def mark_notification_read(current_user_id, current_user_role, notif_id):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -908,7 +908,7 @@ def create_profile():
         "message": "User not found"
         }), 404
 
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
 
     # lOAD DATA FROM DATABASE TO ENSURE NO DUPLICATES
@@ -991,7 +991,7 @@ def create_user():
                 "message": f"Missing field: {field}"
             }), 400
             
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         # Check duplicate username properly
@@ -1093,7 +1093,7 @@ def verify_user():
 
 @app.route("/api/pin", methods=["POST"])
 def add_pin():
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         data = request.get_json()
@@ -1209,7 +1209,7 @@ def complete_cust():
         )
         save_path = result['secure_url']
         
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         cursor.execute("""
@@ -1417,7 +1417,7 @@ def resend_verification():
 
 @app.route("/loginp", methods=["POST"])
 def verifylogin():
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         data = request.get_json()
@@ -1744,7 +1744,7 @@ def reset():
         if not data.get(field):
             return jsonify({"status": "error", "message": f"Missing {field}"}), 400
             
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -1894,7 +1894,7 @@ def savepassword():
             "message": "Password doesn't match."
         }), 400
 
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -2081,7 +2081,7 @@ def create_invoice(current_user_id, current_user_role):
     else:
         status = "unpaid"
         
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         # Verify user
@@ -2309,7 +2309,7 @@ def save_draft(current_user_id, current_user_role):
     if not all([client_name, client_email, invoice_date, due_date]):
         return jsonify({"status": "error", "message": "Missing required fields"}), 400
 
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
 
     try:
@@ -2420,7 +2420,7 @@ def save_draft(current_user_id, current_user_role):
 @app.route("/api/pin/update", methods=["POST"])
 @token_required
 def update_pin(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
     try:
         data = request.get_json()
@@ -2603,7 +2603,7 @@ Need help? Contact our support team at {support_email}.
 @app.route("/api/password/update", methods=["POST"])
 @token_required
 def update_password(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True)
     try:
         data = request.get_json()
@@ -2797,7 +2797,7 @@ Need assistance? Contact us at {support_email}.
 @app.route("/api/update-settings", methods=["POST"])
 @token_required
 def update_settings(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         data = request.get_json()
@@ -2869,7 +2869,7 @@ def update_settings(current_user_id, current_user_role):
 @app.route("/api/invoices/<int:invoice_id>", methods=["GET"])
 @token_required
 def get_invoice(current_user_id, current_user_role, invoice_id):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     # ================= INVOICE =================
@@ -2982,7 +2982,7 @@ def get_invoice(current_user_id, current_user_role, invoice_id):
 @app.route("/api/clients/add", methods=["POST"])
 @token_required
 def add_clients(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         data = request.get_json()
@@ -3066,7 +3066,7 @@ def add_clients(current_user_id, current_user_role):
 @app.route("/api/update/profilepic",methods=["POST"])
 @token_required
 def update_profile_pic(current_user_id,current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         file = request.files.get("profile_picture")  
@@ -3139,7 +3139,7 @@ def update_client(current_user_id,current_user_role,client_id):
                 "message": f"Missing field: {field}"
             }), 400
 
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try: 
         cursor.execute(
@@ -3188,7 +3188,7 @@ def update_company_logo(current_user_id,current_user_role):
         )
         save_path = result['secure_url']
         
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -3247,7 +3247,7 @@ def update_profile(current_user_id,current_user_role):
                 "message": f"Missing field: {field}"
             }), 400
             
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -3295,7 +3295,7 @@ def update_profile(current_user_id,current_user_role):
 @app.route("/api/delete-draft/<int:draft_id>", methods=["DELETE"])
 @token_required
 def delete_draft(current_user_id, current_user_role,draft_id):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -3325,7 +3325,7 @@ def delete_draft(current_user_id, current_user_role,draft_id):
 @app.route("/api/delete-account", methods=["DELETE"])
 @token_required
 def delete_account(current_user_id, current_user_role):
-    conn = get_gb()
+    conn = get_db()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     data = request.get_json()
@@ -3465,6 +3465,7 @@ def delete_account(current_user_id, current_user_role):
 
 if __name__ == "__main__":
     app.run()
+
 
 
 
