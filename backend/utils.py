@@ -19,6 +19,8 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from typing import Optional
 from datetime import datetime,timedelta
+import string
+
 
 
 load_dotenv()
@@ -664,6 +666,9 @@ def check_overdue_invoices():
           conn.close()
 
 
+def generate_referral_code(length=8):
+    characters = string.ascii_uppercase + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
 
 
 
